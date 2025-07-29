@@ -31,8 +31,20 @@ print(f"DEBUG: Openwrap_DFP_Setup in current: {os.path.exists(openwrap_dir)}")
 print(f"DEBUG: Openwrap_DFP_Setup in parent: {os.path.exists(parent_openwrap_dir)}")
 print(f"DEBUG: Python path: {sys.path[:3]}")
 
-# Import the modules
-from Openwrap_DFP_Setup.dfp.create_line_items import create_line_item_config, create_line_items
+# Import the modules - try different import approaches
+try:
+    from Openwrap_DFP_Setup.dfp.create_line_items import create_line_item_config, create_line_items
+except ImportError:
+    # Try importing from the full path
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "create_line_items", 
+        os.path.join(current_dir, "Openwrap_DFP_Setup", "dfp", "create_line_items.py")
+    )
+    create_line_items_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(create_line_items_module)
+    create_line_item_config = create_line_items_module.create_line_item_config
+    create_line_items = create_line_items_module.create_line_items
 
 from flask import Flask, render_template, request, redirect, flash
 # Import all required modules
