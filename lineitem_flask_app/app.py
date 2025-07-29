@@ -28,7 +28,7 @@ if root_openwrap_dir not in sys.path:
 print(f"DEBUG: Current directory: {current_dir}")
 print(f"DEBUG: Parent directory: {parent_dir}")
 print(f"DEBUG: Openwrap_DFP_Setup in current: {os.path.exists(openwrap_dir)}")
-print(f"DEBUG: Openwrap_DFP_Setup in parent: {os.path.exists(parent_openwrap_dir)}")
+print(f"DEBUG: Openwrap_DFP_Setup in root: {os.path.exists(root_openwrap_dir)}")
 print(f"DEBUG: Python path: {sys.path[:3]}")
 
 # Import the modules - try different import approaches
