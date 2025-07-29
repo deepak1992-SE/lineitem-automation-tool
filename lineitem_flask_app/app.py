@@ -1,5 +1,6 @@
 
 
+import os
 from flask import Flask, render_template, request, redirect, flash
 from Openwrap_DFP_Setup.dfp.create_line_items import create_line_item_config, create_line_items
 from Openwrap_DFP_Setup.dfp.create_orders import get_order_id_by_name, create_order
@@ -14,6 +15,14 @@ from Openwrap_DFP_Setup.dfp.get_advertisers import get_advertiser_id_by_name
 from Openwrap_DFP_Setup.dfp.get_placements import get_placement_ids_by_name
 import math
 from Openwrap_DFP_Setup.tasks.price_utils import num_to_str
+
+# Setup Google Ad Manager credentials for Render deployment
+try:
+    from googleads_env import setup_googleads_for_render
+    setup_googleads_for_render()
+except ImportError:
+    # Local development - use local googleads.yaml file
+    pass
 
 app = Flask(__name__)
 app.secret_key = 'lineitem_creator_secret'
