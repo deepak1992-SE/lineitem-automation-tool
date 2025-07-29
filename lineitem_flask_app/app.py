@@ -1,6 +1,14 @@
 
 
 import os
+import sys
+
+# Add parent directory to Python path for module imports
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
 from flask import Flask, render_template, request, redirect, flash
 from Openwrap_DFP_Setup.dfp.create_line_items import create_line_item_config, create_line_items
 from Openwrap_DFP_Setup.dfp.create_orders import get_order_id_by_name, create_order
