@@ -3,16 +3,22 @@
 import os
 import sys
 
-# Add current directory to Python path for module imports
+# Setup proper import paths
 current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
 
+# Add Openwrap_DFP_Setup directory to Python path
+openwrap_dir = os.path.join(current_dir, 'Openwrap_DFP_Setup')
+if openwrap_dir not in sys.path:
+    sys.path.insert(0, openwrap_dir)
+
 # Try to import the modules
 try:
     from Openwrap_DFP_Setup.dfp.create_line_items import create_line_item_config, create_line_items
+    print("✅ SUCCESS: Openwrap_DFP_Setup modules imported")
 except ImportError as e:
-    print(f"Warning: Could not import create_line_items: {e}")
+    print(f"❌ WARNING: Could not import Openwrap_DFP_Setup modules: {e}")
     # Create dummy functions
     def create_line_item_config(*args, **kwargs): pass
     def create_line_items(*args, **kwargs): pass
@@ -45,7 +51,22 @@ except ImportError as e:
     def get_advertiser_id_by_name(*args, **kwargs): pass
     def get_placement_ids_by_name(*args, **kwargs): pass
     def num_to_str(*args, **kwargs): pass
-    class OpenWrapTargetingKeyGen: pass
+    class OpenWrapTargetingKeyGen:
+        def __init__(self, price_els=None, creative_type=None):
+            self.price_els = price_els or []
+            self.creative_type = creative_type or 'WEB'
+            print(f"DEBUG: Dummy OpenWrapTargetingKeyGen created with {len(self.price_els)} price elements")
+        
+        def get_dfp_targeting(self):
+            print("DEBUG: self.price_els =", self.price_els)
+            # Return empty targeting sets for dummy implementation
+            targeting_sets = []
+            for p in self.price_els:
+                targeting_sets.append({
+                    'logicalOperator': 'AND',
+                    'children': []
+                })
+            return targeting_sets
     class settings: pass
 
 import logging
