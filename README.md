@@ -1,0 +1,166 @@
+# Line Item Automation Tool
+
+A Flask web application for automating the creation of line items in Google Ad Manager (GAM) with support for currency exchange and price bucket targeting.
+
+## Features
+
+- **Automated Line Item Creation**: Create multiple line items in Google Ad Manager with custom targeting
+- **Currency Exchange Support**: Convert prices between USD, INR, EUR, GBP, and JPY
+- **Price Bucket Targeting**: Generate `pwtecp` values for precise price range targeting
+- **Flexible Configuration**: Customize start/end prices, granularity, and currency settings
+- **Web Interface**: User-friendly HTML form for easy configuration
+
+## Prerequisites
+
+- Python 3.7 or higher
+- Google Ad Manager account with API access
+- Google Ad Manager API credentials (`googleads.yaml`)
+
+## Installation
+
+1. **Clone the repository**:
+   ```bash
+   git clone <your-repo-url>
+   cd Lineitem-automation-tool
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Configure Google Ad Manager credentials**:
+   - Place your `googleads.yaml` file in the project root
+   - Ensure the file contains your GAM network ID and API credentials
+
+## Configuration
+
+### Google Ad Manager Setup
+
+1. Create a `googleads.yaml` file with your GAM credentials:
+   ```yaml
+   ad_manager:
+     application_name: LineItemAutomationTool
+     path_to_private_key_file: path/to/your/private-key.json
+   ```
+
+2. Update the network ID in `lineitem_flask_app/Openwrap_DFP_Setup/settings.py`:
+   ```python
+   DFP_NETWORK_CODE = 'your-network-id'
+   ```
+
+### Currency Settings
+
+The application supports currency exchange with the following currencies:
+- USD (default)
+- INR (Indian Rupee)
+- EUR (Euro)
+- GBP (British Pound)
+- JPY (Japanese Yen)
+
+## Usage
+
+1. **Start the Flask application**:
+   ```bash
+   cd lineitem_flask_app
+   python app.py
+   ```
+
+2. **Access the web interface**:
+   - Open your browser and go to `http://localhost:5000`
+   - Fill in the form with your desired configuration
+
+3. **Configure line items**:
+   - **Start Price**: Beginning of the price range
+   - **End Price**: End of the price range
+   - **Granularity**: Price increment between line items
+   - **Currency Code**: Base currency for calculations
+   - **Currency Exchange**: Enable to convert prices to target currency
+   - **Target Currency**: Currency to convert prices to (when exchange is enabled)
+
+## How It Works
+
+### Price Bucket Generation
+
+The application generates price buckets based on your configuration:
+
+```
+Example: Start=5, End=7, Granularity=0.03
+- Bucket 1: 5.00-5.02 (pwtecp: ["5.00", "5.01", "5.02"])
+- Bucket 2: 5.03-5.05 (pwtecp: ["5.03", "5.04", "5.05"])
+- ...
+- Bucket 67: 6.98-6.99 (pwtecp: ["6.98", "6.99"])
+```
+
+### Currency Exchange
+
+When currency exchange is enabled:
+- **Price values** are converted to the target currency
+- **pwtecp values** remain in USD (for bidding purposes)
+- **Line item currency** is set to the target currency
+
+### Line Item Creation
+
+Each price bucket creates a line item with:
+- Custom targeting using `pwtecp` values
+- Appropriate currency settings
+- Optimized for Google Ad Manager integration
+
+## File Structure
+
+```
+Lineitem-automation-tool/
+├── lineitem_flask_app/
+│   ├── app.py                 # Main Flask application
+│   ├── templates/
+│   │   └── index.html        # Web interface
+│   └── Openwrap_DFP_Setup/   # GAM integration modules
+│       ├── settings.py       # Configuration settings
+│       ├── dfp/
+│       │   └── create_line_items.py
+│       └── tasks/
+│           └── dfp_utils.py
+├── requirements.txt           # Python dependencies
+├── .gitignore               # Git ignore rules
+└── README.md               # This file
+```
+
+## Security Notes
+
+- **Never commit** your `googleads.yaml` file to version control
+- **Keep API credentials** secure and private
+- **Use environment variables** for sensitive configuration in production
+
+## Troubleshooting
+
+### Common Issues
+
+1. **"INVALID_LINE_ITEM_CURRENCY" Error**:
+   - Your GAM network may not support the selected currency
+   - Use USD as the currency code or contact your GAM administrator
+
+2. **Import Errors**:
+   - Ensure all dependencies are installed: `pip install -r requirements.txt`
+   - Check Python version compatibility
+
+3. **API Connection Issues**:
+   - Verify your `googleads.yaml` configuration
+   - Check network connectivity and API quotas
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+For issues and questions:
+- Check the troubleshooting section above
+- Review Google Ad Manager API documentation
+- Create an issue in the GitHub repository 

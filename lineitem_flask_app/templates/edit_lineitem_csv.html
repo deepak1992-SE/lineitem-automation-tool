@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit LineItem.csv - PubMatic</title>
+    <link href="https://fonts.googleapis.com/css?family=Inter:400,600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background: #f7f8fa;
+            margin: 0;
+            color: #222;
+        }
+        .sidebar {
+            width: 220px;
+            background: #fff;
+            border-right: 1px solid #e5e7eb;
+            height: 100vh;
+            position: fixed;
+            top: 0; left: 0;
+            padding: 32px 0 0 0;
+        }
+        .sidebar .logo {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #0096e6;
+            margin-left: 32px;
+            margin-bottom: 40px;
+        }
+        .main {
+            margin-left: 240px;
+            padding: 40px 32px;
+        }
+        .form-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            padding: 32px;
+            max-width: 900px;
+            margin: auto;
+        }
+        h2 {
+            color: #0096e6;
+            margin-bottom: 24px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 24px;
+        }
+        th, td {
+            border: 1px solid #e5e7eb;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background: #f0f4f8;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background: #f7f8fa;
+        }
+        .add-row-btn, .remove-row-btn, .save-btn {
+            background: #0096e6;
+            color: #fff;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 8px 4px 0 0;
+        }
+        .add-row-btn:hover, .remove-row-btn:hover, .save-btn:hover {
+            background: #007bb5;
+        }
+        .remove-row-btn {
+            background: #d32f2f;
+        }
+        .remove-row-btn:hover {
+            background: #a31515;
+        }
+        .messages {
+            margin-bottom: 24px;
+            color: #d32f2f;
+        }
+    </style>
+    <script>
+        function addRow() {
+            const table = document.getElementById('csv-table');
+            const rowCount = table.rows.length;
+            const header = Array.from(table.rows[0].cells).map(cell => cell.innerText);
+            const newRow = table.insertRow(-1);
+            for (let i = 0; i < header.length; i++) {
+                const cell = newRow.insertCell(i);
+                cell.innerHTML = `<input type='text' name='${header[i]}_${rowCount-1}' style='width:100%' />`;
+            }
+            // Add remove button
+            const cell = newRow.insertCell(header.length);
+            cell.innerHTML = `<button type='button' class='remove-row-btn' onclick='removeRow(this)'>Remove</button>`;
+            document.getElementById('num_rows').value = rowCount;
+        }
+        function removeRow(btn) {
+            const row = btn.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+            // Update num_rows
+            const table = document.getElementById('csv-table');
+            document.getElementById('num_rows').value = table.rows.length - 1;
+        }
+        function updateRowNames() {
+            // Re-index input names after row removal
+            const table = document.getElementById('csv-table');
+            const header = Array.from(table.rows[0].cells).map(cell => cell.innerText);
+            for (let r = 1; r < table.rows.length; r++) {
+                for (let c = 0; c < header.length; c++) {
+                    const input = table.rows[r].cells[c].querySelector('input');
+                    if (input) input.name = `${header[c]}_${r-1}`;
+                }
+            }
+        }
+        function onRemoveRow(btn) {
+            removeRow(btn);
+            updateRowNames();
+        }
+        window.onload = function() {
+            // Attach remove handlers
+            const removeBtns = document.querySelectorAll('.remove-row-btn');
+            removeBtns.forEach(btn => btn.onclick = function() { onRemoveRow(btn); });
+        };
+    </script>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">Pub<span style="color:#222">Matic</span></div>
+        <div style="margin-left:32px; color:#888; font-size:1.1rem;">LineItem.csv Editor</div>
+    </div>
+    <div class="main">
+        <div class="form-card">
+            <h2>Edit LineItem.csv</h2>
+            <form method="POST">
+                <input type="hidden" name="header" value="{{ header|join(',') }}">
+                <input type="hidden" id="num_rows" name="num_rows" value="{{ table|length if table else 1 }}">
+                <table id="csv-table">
+                    <tr>
+                        {% for col in header %}
+                        <th>{{ col }}</th>
+                        {% endfor %}
+                        <th>Action</th>
+                    </tr>
+                    {% if table|length == 0 %}
+                    <tr>
+                        {% set row_idx = 0 %}
+                        {% for col in header %}
+                        <td><input type="text" name="{{ col }}_0" style="width:100%"></td>
+                        {% endfor %}
+                        <td><button type="button" class="remove-row-btn" onclick="onRemoveRow(this)">Remove</button></td>
+                    </tr>
+                    {% else %}
+                    {% for row in table %}
+                    <tr>
+                        {% set row_idx = loop.index0 %}
+                        {% for col, val in zip(header, row) %}
+                        <td><input type="text" name="{{ col }}_{{ row_idx }}" value="{{ val }}" style="width:100%"></td>
+                        {% endfor %}
+                        <td><button type="button" class="remove-row-btn" onclick="onRemoveRow(this)">Remove</button></td>
+                    </tr>
+                    {% endfor %}
+                    {% endif %}
+                </table>
+                <button type="button" class="add-row-btn" onclick="addRow()">Add Row</button>
+                <button type="submit" class="save-btn">Save Changes</button>
+                <button type="submit" name="back_to_home" value="1" style="margin-left:16px; background:#fff; color:#0096e6; border:1px solid #0096e6; padding:8px 18px; border-radius:6px; font-weight:600;">Back to Home</button>
+            </form>
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                <div class="messages">
+                {% for msg in messages %}
+                  <div>{{ msg }}</div>
+                {% endfor %}
+                </div>
+              {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+</body>
+</html> 
