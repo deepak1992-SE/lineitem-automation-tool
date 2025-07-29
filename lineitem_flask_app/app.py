@@ -53,6 +53,17 @@ except ImportError:
     
     if file_path is None:
         print(f"DEBUG: Could not find create_line_items.py in any of: {possible_paths}")
+        # Let's see what's actually in the Openwrap_DFP_Setup directory
+        openwrap_dir = os.path.join(current_dir, "Openwrap_DFP_Setup")
+        if os.path.exists(openwrap_dir):
+            print(f"DEBUG: Contents of {openwrap_dir}:")
+            for root, dirs, files in os.walk(openwrap_dir):
+                level = root.replace(openwrap_dir, '').count(os.sep)
+                indent = ' ' * 2 * level
+                print(f"{indent}{os.path.basename(root)}/")
+                subindent = ' ' * 2 * (level + 1)
+                for file in files:
+                    print(f"{subindent}{file}")
         raise ImportError("create_line_items.py not found")
     
     spec = importlib.util.spec_from_file_location("create_line_items", file_path)
