@@ -3,7 +3,7 @@ services:
     name: lineitem-automation-tool
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: cd lineitem_flask_app && PYTHONPATH=.. python app.py
+    startCommand: python lineitem_flask_app/app.py
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.0 

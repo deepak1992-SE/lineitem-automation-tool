@@ -13,61 +13,21 @@ openwrap_dir = os.path.join(current_dir, 'Openwrap_DFP_Setup')
 if openwrap_dir not in sys.path:
     sys.path.insert(0, openwrap_dir)
 
-# Try to import the modules
-try:
-    from Openwrap_DFP_Setup.dfp.create_line_items import create_line_item_config, create_line_items
-    print("✅ SUCCESS: Openwrap_DFP_Setup modules imported")
-except ImportError as e:
-    print(f"❌ WARNING: Could not import Openwrap_DFP_Setup modules: {e}")
-    # Create dummy functions
-    def create_line_item_config(*args, **kwargs): pass
-    def create_line_items(*args, **kwargs): pass
+# Import the modules
+from Openwrap_DFP_Setup.dfp.create_line_items import create_line_item_config, create_line_items
 
 from flask import Flask, render_template, request, redirect, flash
-# Import all required modules with fallback
-try:
-    from Openwrap_DFP_Setup.dfp.create_orders import get_order_id_by_name, create_order
-    from Openwrap_DFP_Setup.dfp.get_root_ad_unit_id import get_root_ad_unit_id
-    from Openwrap_DFP_Setup.tasks.add_new_openwrap_partner import OpenWrapTargetingKeyGen
-    from Openwrap_DFP_Setup import settings
-    from Openwrap_DFP_Setup.dfp.create_creatives import create_duplicate_creative_configs, create_creatives
-    from Openwrap_DFP_Setup.dfp.associate_line_items_and_creatives import make_licas
-    from Openwrap_DFP_Setup.dfp.get_advertisers import create_advertiser
-    from Openwrap_DFP_Setup.dfp.get_advertisers import get_advertiser_id_by_name
-    from Openwrap_DFP_Setup.dfp.get_placements import get_placement_ids_by_name
-    from Openwrap_DFP_Setup.tasks.price_utils import num_to_str
-except ImportError as e:
-    print(f"Warning: Could not import Openwrap_DFP_Setup modules: {e}")
-    # Create dummy functions for testing
-    def create_line_item_config(*args, **kwargs): pass
-    def create_line_items(*args, **kwargs): pass
-    def get_order_id_by_name(*args, **kwargs): pass
-    def create_order(*args, **kwargs): pass
-    def get_root_ad_unit_id(*args, **kwargs): pass
-    def create_duplicate_creative_configs(*args, **kwargs): pass
-    def create_creatives(*args, **kwargs): pass
-    def make_licas(*args, **kwargs): pass
-    def create_advertiser(*args, **kwargs): pass
-    def get_advertiser_id_by_name(*args, **kwargs): pass
-    def get_placement_ids_by_name(*args, **kwargs): pass
-    def num_to_str(*args, **kwargs): pass
-    class OpenWrapTargetingKeyGen:
-        def __init__(self, price_els=None, creative_type=None):
-            self.price_els = price_els or []
-            self.creative_type = creative_type or 'WEB'
-            print(f"DEBUG: Dummy OpenWrapTargetingKeyGen created with {len(self.price_els)} price elements")
-        
-        def get_dfp_targeting(self):
-            print("DEBUG: self.price_els =", self.price_els)
-            # Return empty targeting sets for dummy implementation
-            targeting_sets = []
-            for p in self.price_els:
-                targeting_sets.append({
-                    'logicalOperator': 'AND',
-                    'children': []
-                })
-            return targeting_sets
-    class settings: pass
+# Import all required modules
+from Openwrap_DFP_Setup.dfp.create_orders import get_order_id_by_name, create_order
+from Openwrap_DFP_Setup.dfp.get_root_ad_unit_id import get_root_ad_unit_id
+from Openwrap_DFP_Setup.tasks.add_new_openwrap_partner import OpenWrapTargetingKeyGen
+from Openwrap_DFP_Setup import settings
+from Openwrap_DFP_Setup.dfp.create_creatives import create_duplicate_creative_configs, create_creatives
+from Openwrap_DFP_Setup.dfp.associate_line_items_and_creatives import make_licas
+from Openwrap_DFP_Setup.dfp.get_advertisers import create_advertiser
+from Openwrap_DFP_Setup.dfp.get_advertisers import get_advertiser_id_by_name
+from Openwrap_DFP_Setup.dfp.get_placements import get_placement_ids_by_name
+from Openwrap_DFP_Setup.tasks.price_utils import num_to_str
 
 import logging
 import math
