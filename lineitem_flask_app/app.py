@@ -167,7 +167,7 @@ def index():
             canonical_pwtplt = pwtplt_map.get(setup_type, setup_type)
             creative_sizes_str = form['creative_sizes']
             currency_code = form.get('currency_code', 'USD')
-            num_creatives = int(form.get('num_creatives', 1))
+            num_creatives = int(form.get('num_creatives', '1') or '1')
             
             # Extract currency exchange settings
             currency_exchange = form.get('currency_exchange') == 'on'  # Checkbox returns 'on' when checked
@@ -175,52 +175,65 @@ def index():
 
             # Prepare price bucket ranges
             expanded_prices = []
-            ranges_count = int(form.get('ranges_count', 0))
-            for i in range(ranges_count):
-                start = float(form.get(f'start_range_{i}'))
-                end = float(form.get(f'end_range_{i}'))
-                gran = float(form.get(f'granularity_{i}'))
-                
-                # Apply currency conversion if enabled
-                if currency_exchange and target_currency != currency_code:
-                    exchange_rate = get_exchange_rate(currency_code, target_currency)
-                    start = start * exchange_rate
-                    end = end * exchange_rate
-                    if gran != -1:
-                        gran = gran * exchange_rate
-                
-                if gran == -1:
-                    # Catch-all: one line item for the whole range, pwtecp is all integer values in range
-                    pwtecp_values = [f"{int(x)}." for x in range(int(math.ceil(start)), int(math.floor(end)) + 1)]
-                    expanded_prices.append({
-                        'start_range': num_to_str(start, 2),
-                        'end_range': num_to_str(end, 2),
-                        'granularity': '-1',
-                        'rate_id': form.get(f'rate_id_{i}'),
-                        'pwtecp_values': pwtecp_values,
-                        'is_catch_all': True
-                    })
-                else:
-                    current = start
-                    while current <= end + 1e-8:  # add epsilon for float rounding
-                        # For each bucket, generate all pwtecp values in the bucket
-                        bucket_start = current
-                        bucket_end = min(current + gran, end)
-                        
-                        # Generate pwtecp values for the bucket range
-                        pwtecp_values = []
-                        x = bucket_start
-                        while x < bucket_end:  # Exclude bucket_end value to avoid overlap
-                            pwtecp_values.append(f"{x:.2f}")
-                            x = round(x + 0.01, 2)  # Increment by 0.01
-                        
-                        expanded_prices.append({
-                            'start_range': num_to_str(current, 2),
-                            'granularity': num_to_str(gran, 2),
-                            'rate_id': form.get(f'rate_id_{i}'),
-                            'pwtecp_values': pwtecp_values
+            ranges_count = int(form.get('ranges_count', '0') or '0')
+            logging.debug(f"ranges_count: {ranges_count}")
+            
+            # If no ranges provided, create a default range
+            if ranges_count == 0:
+                logging.debug("No ranges provided, creating default range")
+                expanded_prices.append({
+                    'start_range': '5.00',
+                    'end_range': '7.00',
+                    'granularity': '0.03',
+                    'rate_id': '2',
+                    'pwtecp_values': ['5.00', '5.01', '5.02']
                 })
-                        current = round(current + gran, 8)
+            else:
+                for i in range(ranges_count):
+                    start = float(form.get(f'start_range_{i}'))
+                    end = float(form.get(f'end_range_{i}'))
+                    gran = float(form.get(f'granularity_{i}'))
+                    
+                    # Apply currency conversion if enabled
+                    if currency_exchange and target_currency != currency_code:
+                        exchange_rate = get_exchange_rate(currency_code, target_currency)
+                        start = start * exchange_rate
+                        end = end * exchange_rate
+                        if gran != -1:
+                            gran = gran * exchange_rate
+                    
+                    if gran == -1:
+                        # Catch-all: one line item for the whole range, pwtecp is all integer values in range
+                        pwtecp_values = [f"{int(x)}." for x in range(int(math.ceil(start)), int(math.floor(end)) + 1)]
+                        expanded_prices.append({
+                            'start_range': num_to_str(start, 2),
+                            'end_range': num_to_str(end, 2),
+                            'granularity': '-1',
+                            'rate_id': form.get(f'rate_id_{i}'),
+                            'pwtecp_values': pwtecp_values,
+                            'is_catch_all': True
+                        })
+                    else:
+                        current = start
+                        while current <= end + 1e-8:  # add epsilon for float rounding
+                            # For each bucket, generate all pwtecp values in the bucket
+                            bucket_start = current
+                            bucket_end = min(current + gran, end)
+                            
+                            # Generate pwtecp values for the bucket range
+                            pwtecp_values = []
+                            x = bucket_start
+                            while x < bucket_end:  # Exclude bucket_end value to avoid overlap
+                                pwtecp_values.append(f"{x:.2f}")
+                                x = round(x + 0.01, 2)  # Increment by 0.01
+                            
+                            expanded_prices.append({
+                                'start_range': num_to_str(current, 2),
+                                'granularity': num_to_str(gran, 2),
+                                'rate_id': form.get(f'rate_id_{i}'),
+                                'pwtecp_values': pwtecp_values
+                            })
+                            current = round(current + gran, 8)
 
             logging.debug(f"Expanded price_els = {expanded_prices}")
 
