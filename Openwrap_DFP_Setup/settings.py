@@ -1,7 +1,23 @@
 import os
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-GOOGLEADS_YAML_FILE = os.path.join(ROOT_DIR, 'googleads.yaml')
+
+# Check if we're on Render and use environment variable
+if os.environ.get('RENDER'):
+    # On Render, create googleads.yaml from environment variable
+    import tempfile
+    yaml_content = os.environ.get('GOOGLEADS_YAML_CONTENT')
+    if yaml_content:
+        temp_dir = tempfile.gettempdir()
+        yaml_path = os.path.join(temp_dir, 'googleads.yaml')
+        with open(yaml_path, 'w') as f:
+            f.write(yaml_content)
+        GOOGLEADS_YAML_FILE = yaml_path
+    else:
+        GOOGLEADS_YAML_FILE = os.path.join(ROOT_DIR, 'googleads.yaml')
+else:
+    # Local development
+    GOOGLEADS_YAML_FILE = os.path.join(ROOT_DIR, 'googleads.yaml')
 
 #########################################################################
 # DFP SETTINGS
