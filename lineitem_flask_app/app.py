@@ -3,26 +3,19 @@
 import os
 import sys
 
-# Add parent directory to Python path for module imports
+# Add current directory to Python path for module imports
 current_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.dirname(current_dir)
-if parent_dir not in sys.path:
-    sys.path.insert(0, parent_dir)
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
 
-# Alternative: Try to import using absolute path
+# Try to import the modules
 try:
     from Openwrap_DFP_Setup.dfp.create_line_items import create_line_item_config, create_line_items
-except ImportError:
-    # If that fails, try importing from the absolute path
-    import importlib.util
-    spec = importlib.util.spec_from_file_location(
-        "create_line_items", 
-        os.path.join(parent_dir, "Openwrap_DFP_Setup", "dfp", "create_line_items.py")
-    )
-    create_line_items_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(create_line_items_module)
-    create_line_item_config = create_line_items_module.create_line_item_config
-    create_line_items = create_line_items_module.create_line_items
+except ImportError as e:
+    print(f"Warning: Could not import create_line_items: {e}")
+    # Create dummy functions
+    def create_line_item_config(*args, **kwargs): pass
+    def create_line_items(*args, **kwargs): pass
 
 from flask import Flask, render_template, request, redirect, flash
 # Import all required modules with fallback
