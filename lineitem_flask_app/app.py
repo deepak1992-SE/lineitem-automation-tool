@@ -20,10 +20,10 @@ openwrap_dir = os.path.join(current_dir, 'Openwrap_DFP_Setup')
 if openwrap_dir not in sys.path:
     sys.path.insert(0, openwrap_dir)
 
-# Add parent's Openwrap_DFP_Setup directory to Python path
-parent_openwrap_dir = os.path.join(parent_dir, 'Openwrap_DFP_Setup')
-if parent_openwrap_dir not in sys.path:
-    sys.path.insert(0, parent_openwrap_dir)
+# Add root Openwrap_DFP_Setup directory to Python path (copied files)
+root_openwrap_dir = os.path.join(parent_dir, 'Openwrap_DFP_Setup')
+if root_openwrap_dir not in sys.path:
+    sys.path.insert(0, root_openwrap_dir)
 
 print(f"DEBUG: Current directory: {current_dir}")
 print(f"DEBUG: Parent directory: {parent_dir}")
@@ -39,9 +39,8 @@ except ImportError:
     import importlib.util
     # Try multiple possible paths
     possible_paths = [
-        os.path.join(current_dir, "Openwrap_DFP_Setup", "dfp", "create_line_items.py"),
-        os.path.join(parent_dir, "Openwrap_DFP_Setup", "dfp", "create_line_items.py"),
-        os.path.join(current_dir, "Openwrap_DFP_Setup", "dfp", "create_line_items.py")
+        os.path.join(parent_dir, "Openwrap_DFP_Setup", "dfp", "create_line_items.py"),  # Root level (copied files)
+        os.path.join(current_dir, "Openwrap_DFP_Setup", "dfp", "create_line_items.py"),  # Current directory
     ]
     
     file_path = None
