@@ -37,10 +37,25 @@ try:
 except ImportError:
     # Try importing from the full path
     import importlib.util
-    spec = importlib.util.spec_from_file_location(
-        "create_line_items", 
+    # Try multiple possible paths
+    possible_paths = [
+        os.path.join(current_dir, "Openwrap_DFP_Setup", "dfp", "create_line_items.py"),
+        os.path.join(parent_dir, "Openwrap_DFP_Setup", "dfp", "create_line_items.py"),
         os.path.join(current_dir, "Openwrap_DFP_Setup", "dfp", "create_line_items.py")
-    )
+    ]
+    
+    file_path = None
+    for path in possible_paths:
+        if os.path.exists(path):
+            file_path = path
+            print(f"DEBUG: Found create_line_items.py at: {path}")
+            break
+    
+    if file_path is None:
+        print(f"DEBUG: Could not find create_line_items.py in any of: {possible_paths}")
+        raise ImportError("create_line_items.py not found")
+    
+    spec = importlib.util.spec_from_file_location("create_line_items", file_path)
     create_line_items_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(create_line_items_module)
     create_line_item_config = create_line_items_module.create_line_item_config
