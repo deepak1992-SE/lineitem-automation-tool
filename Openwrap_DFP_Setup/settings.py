@@ -14,7 +14,21 @@ if os.environ.get('RENDER'):
             f.write(yaml_content)
         GOOGLEADS_YAML_FILE = yaml_path
     else:
-        GOOGLEADS_YAML_FILE = os.path.join(ROOT_DIR, 'googleads.yaml')
+        # Fallback: create googleads.yaml with embedded service account
+        service_account_json = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')
+        if service_account_json:
+            temp_dir = tempfile.gettempdir()
+            yaml_path = os.path.join(temp_dir, 'googleads.yaml')
+            yaml_content = f"""ad_manager:
+  application_name: API-Access
+  network_code: '15671365'
+  service_account_json: |
+{chr(10).join('    ' + line for line in service_account_json.split(chr(10)))}"""
+            with open(yaml_path, 'w') as f:
+                f.write(yaml_content)
+            GOOGLEADS_YAML_FILE = yaml_path
+        else:
+            GOOGLEADS_YAML_FILE = os.path.join(ROOT_DIR, 'googleads.yaml')
 else:
     # Local development
     GOOGLEADS_YAML_FILE = os.path.join(ROOT_DIR, 'googleads.yaml')
