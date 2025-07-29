@@ -3,15 +3,33 @@
 import os
 import sys
 
-# Setup proper import paths
+# Add multiple possible paths for Openwrap_DFP_Setup
 current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+
+# Add current directory to Python path
 if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
+
+# Add parent directory to Python path
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
 
 # Add Openwrap_DFP_Setup directory to Python path
 openwrap_dir = os.path.join(current_dir, 'Openwrap_DFP_Setup')
 if openwrap_dir not in sys.path:
     sys.path.insert(0, openwrap_dir)
+
+# Add parent's Openwrap_DFP_Setup directory to Python path
+parent_openwrap_dir = os.path.join(parent_dir, 'Openwrap_DFP_Setup')
+if parent_openwrap_dir not in sys.path:
+    sys.path.insert(0, parent_openwrap_dir)
+
+print(f"DEBUG: Current directory: {current_dir}")
+print(f"DEBUG: Parent directory: {parent_dir}")
+print(f"DEBUG: Openwrap_DFP_Setup in current: {os.path.exists(openwrap_dir)}")
+print(f"DEBUG: Openwrap_DFP_Setup in parent: {os.path.exists(parent_openwrap_dir)}")
+print(f"DEBUG: Python path: {sys.path[:3]}")
 
 # Import the modules
 from Openwrap_DFP_Setup.dfp.create_line_items import create_line_item_config, create_line_items
