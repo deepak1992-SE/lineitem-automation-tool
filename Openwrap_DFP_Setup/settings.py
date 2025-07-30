@@ -30,6 +30,13 @@ if os.environ.get('RENDER'):
         GOOGLEADS_YAML_FILE = yaml_path
         print(f"DEBUG: Created googleads.yaml at: {yaml_path}")
         print(f"DEBUG: YAML content length: {len(yaml_content)}")
+        print(f"DEBUG: YAML content preview: {yaml_content[:200]}...")
+        
+        # Verify the file was created correctly
+        with open(yaml_path, 'r') as f:
+            file_content = f.read()
+            print(f"DEBUG: File content length: {len(file_content)}")
+            print(f"DEBUG: File content preview: {file_content[:200]}...")
     else:
         # Fallback: try GOOGLEADS_YAML_CONTENT
         yaml_content = os.environ.get('GOOGLEADS_YAML_CONTENT')
