@@ -12,33 +12,35 @@ if os.environ.get('RENDER'):
     print("DEBUG: Running on Render, setting up environment-based configuration")
     # On Render, create googleads.yaml from environment variable
     import tempfile
-    yaml_content = os.environ.get('GOOGLEADS_YAML_CONTENT')
-    if yaml_content:
-        print("DEBUG: Using GOOGLEADS_YAML_CONTENT")
+    
+    # Try GOOGLE_SERVICE_ACCOUNT_JSON first (preferred method)
+    service_account_json = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')
+    print(f"DEBUG: Service account JSON length: {len(service_account_json) if service_account_json else 0}")
+    if service_account_json and service_account_json != 'REPLACE_WITH_YOUR_ACTUAL_SERVICE_ACCOUNT_JSON':
+        print("DEBUG: Using GOOGLE_SERVICE_ACCOUNT_JSON")
         temp_dir = tempfile.gettempdir()
         yaml_path = os.path.join(temp_dir, 'googleads.yaml')
-        with open(yaml_path, 'w') as f:
-            f.write(yaml_content)
-        GOOGLEADS_YAML_FILE = yaml_path
-        print(f"DEBUG: Created googleads.yaml at: {yaml_path}")
-    else:
-        # Fallback: create googleads.yaml with embedded service account
-        service_account_json = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')
-        print(f"DEBUG: Service account JSON length: {len(service_account_json) if service_account_json else 0}")
-        if service_account_json and service_account_json != 'REPLACE_WITH_YOUR_ACTUAL_SERVICE_ACCOUNT_JSON':
-            print("DEBUG: Using GOOGLE_SERVICE_ACCOUNT_JSON")
-            temp_dir = tempfile.gettempdir()
-            yaml_path = os.path.join(temp_dir, 'googleads.yaml')
-            yaml_content = f"""ad_manager:
+        yaml_content = f"""ad_manager:
   application_name: API-Access
   network_code: '15671365'
   service_account_json: |
 {chr(10).join('    ' + line for line in service_account_json.split(chr(10)))}"""
+        with open(yaml_path, 'w') as f:
+            f.write(yaml_content)
+        GOOGLEADS_YAML_FILE = yaml_path
+        print(f"DEBUG: Created googleads.yaml at: {yaml_path}")
+        print(f"DEBUG: YAML content length: {len(yaml_content)}")
+    else:
+        # Fallback: try GOOGLEADS_YAML_CONTENT
+        yaml_content = os.environ.get('GOOGLEADS_YAML_CONTENT')
+        if yaml_content:
+            print("DEBUG: Using GOOGLEADS_YAML_CONTENT")
+            temp_dir = tempfile.gettempdir()
+            yaml_path = os.path.join(temp_dir, 'googleads.yaml')
             with open(yaml_path, 'w') as f:
                 f.write(yaml_content)
             GOOGLEADS_YAML_FILE = yaml_path
             print(f"DEBUG: Created googleads.yaml at: {yaml_path}")
-            print(f"DEBUG: YAML content length: {len(yaml_content)}")
         else:
             print("DEBUG: Using fallback local googleads.yaml")
             print(f"DEBUG: Service account JSON value: {service_account_json}")
