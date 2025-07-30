@@ -88,12 +88,22 @@ import logging
 import math
 
 # Setup Google Ad Manager credentials for Render deployment
+print("DEBUG: app.py - Starting Google Ads setup")
+print(f"DEBUG: app.py - RENDER env var: {os.environ.get('RENDER')}")
+print(f"DEBUG: app.py - GOOGLE_SERVICE_ACCOUNT_JSON exists: {bool(os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON'))}")
+print(f"DEBUG: app.py - GOOGLEADS_YAML_CONTENT exists: {bool(os.environ.get('GOOGLEADS_YAML_CONTENT'))}")
+
 try:
     from googleads_env import setup_googleads_for_render
-    setup_googleads_for_render()
-except ImportError:
+    print("DEBUG: app.py - Imported googleads_env successfully")
+    result = setup_googleads_for_render()
+    print(f"DEBUG: app.py - setup_googleads_for_render returned: {result}")
+except ImportError as e:
+    print(f"DEBUG: app.py - ImportError: {e}")
     # Local development - use local googleads.yaml file
     pass
+except Exception as e:
+    print(f"DEBUG: app.py - Exception in setup_googleads_for_render: {e}")
 
 app = Flask(__name__)
 app.secret_key = 'lineitem_creator_secret'
