@@ -3,20 +3,27 @@ import os
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Check if we're on Render and use environment variable
+print(f"DEBUG: RENDER environment variable: {os.environ.get('RENDER')}")
+print(f"DEBUG: GOOGLE_SERVICE_ACCOUNT_JSON exists: {bool(os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON'))}")
+
 if os.environ.get('RENDER'):
+    print("DEBUG: Running on Render, setting up environment-based configuration")
     # On Render, create googleads.yaml from environment variable
     import tempfile
     yaml_content = os.environ.get('GOOGLEADS_YAML_CONTENT')
     if yaml_content:
+        print("DEBUG: Using GOOGLEADS_YAML_CONTENT")
         temp_dir = tempfile.gettempdir()
         yaml_path = os.path.join(temp_dir, 'googleads.yaml')
         with open(yaml_path, 'w') as f:
             f.write(yaml_content)
         GOOGLEADS_YAML_FILE = yaml_path
+        print(f"DEBUG: Created googleads.yaml at: {yaml_path}")
     else:
         # Fallback: create googleads.yaml with embedded service account
         service_account_json = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')
-        if service_account_json:
+        if service_account_json and service_account_json != 'REPLACE_WITH_YOUR_ACTUAL_SERVICE_ACCOUNT_JSON':
+            print("DEBUG: Using GOOGLE_SERVICE_ACCOUNT_JSON")
             temp_dir = tempfile.gettempdir()
             yaml_path = os.path.join(temp_dir, 'googleads.yaml')
             yaml_content = f"""ad_manager:
@@ -27,11 +34,16 @@ if os.environ.get('RENDER'):
             with open(yaml_path, 'w') as f:
                 f.write(yaml_content)
             GOOGLEADS_YAML_FILE = yaml_path
+            print(f"DEBUG: Created googleads.yaml at: {yaml_path}")
         else:
+            print("DEBUG: Using fallback local googleads.yaml")
             GOOGLEADS_YAML_FILE = os.path.join(ROOT_DIR, 'googleads.yaml')
 else:
+    print("DEBUG: Running locally, using local googleads.yaml")
     # Local development
     GOOGLEADS_YAML_FILE = os.path.join(ROOT_DIR, 'googleads.yaml')
+
+print(f"DEBUG: Final GOOGLEADS_YAML_FILE path: {GOOGLEADS_YAML_FILE}")
 
 #########################################################################
 # DFP SETTINGS
