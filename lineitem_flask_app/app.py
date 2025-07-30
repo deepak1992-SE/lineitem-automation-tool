@@ -88,10 +88,12 @@ import logging
 import math
 
 # Setup Google Ad Manager credentials for Render deployment
-print("DEBUG: app.py - Starting Google Ads setup")
+print("DEBUG: app.py - Starting Google Ads setup - VERSION 2")
 print(f"DEBUG: app.py - RENDER env var: {os.environ.get('RENDER')}")
 print(f"DEBUG: app.py - GOOGLE_SERVICE_ACCOUNT_JSON exists: {bool(os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON'))}")
 print(f"DEBUG: app.py - GOOGLEADS_YAML_CONTENT exists: {bool(os.environ.get('GOOGLEADS_YAML_CONTENT'))}")
+print(f"DEBUG: app.py - Current working directory: {os.getcwd()}")
+print(f"DEBUG: app.py - Environment variables: {dict(os.environ)}")
 
 try:
     from googleads_env import setup_googleads_for_render
