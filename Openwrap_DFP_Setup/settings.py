@@ -19,12 +19,20 @@ if os.environ.get('RENDER'):
     if service_account_json and service_account_json != 'REPLACE_WITH_YOUR_ACTUAL_SERVICE_ACCOUNT_JSON':
         print("DEBUG: Using GOOGLE_SERVICE_ACCOUNT_JSON")
         temp_dir = tempfile.gettempdir()
+        
+        # Create temporary JSON file
+        json_path = os.path.join(temp_dir, 'service_account.json')
+        with open(json_path, 'w') as f:
+            f.write(service_account_json)
+        print(f"DEBUG: Created service account JSON at: {json_path}")
+        
+        # Create YAML file that references the JSON file
         yaml_path = os.path.join(temp_dir, 'googleads.yaml')
         yaml_content = f"""ad_manager:
   application_name: API-Access
   network_code: '15671365'
-  service_account_json: |
-{chr(10).join('    ' + line for line in service_account_json.split(chr(10)))}"""
+  path_to_private_key_file: {json_path}"""
+        
         with open(yaml_path, 'w') as f:
             f.write(yaml_content)
         GOOGLEADS_YAML_FILE = yaml_path
@@ -32,11 +40,16 @@ if os.environ.get('RENDER'):
         print(f"DEBUG: YAML content length: {len(yaml_content)}")
         print(f"DEBUG: YAML content preview: {yaml_content[:200]}...")
         
-        # Verify the file was created correctly
+        # Verify the files were created correctly
         with open(yaml_path, 'r') as f:
             file_content = f.read()
-            print(f"DEBUG: File content length: {len(file_content)}")
-            print(f"DEBUG: File content preview: {file_content[:200]}...")
+            print(f"DEBUG: YAML file content length: {len(file_content)}")
+            print(f"DEBUG: YAML file content preview: {file_content[:200]}...")
+        
+        with open(json_path, 'r') as f:
+            json_content = f.read()
+            print(f"DEBUG: JSON file content length: {len(json_content)}")
+            print(f"DEBUG: JSON file content preview: {json_content[:200]}...")
     else:
         # Fallback: try GOOGLEADS_YAML_CONTENT
         yaml_content = os.environ.get('GOOGLEADS_YAML_CONTENT')
