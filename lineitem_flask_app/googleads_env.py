@@ -5,20 +5,7 @@ def create_googleads_yaml_from_env():
     """Create googleads.yaml file from environment variable"""
     print("DEBUG: googleads_env.py - create_googleads_yaml_from_env called")
     
-    # Try GOOGLEADS_YAML_CONTENT first
-    yaml_content = os.environ.get('GOOGLEADS_YAML_CONTENT')
-    if yaml_content:
-        print("DEBUG: Using GOOGLEADS_YAML_CONTENT")
-        temp_dir = tempfile.gettempdir()
-        yaml_path = os.path.join(temp_dir, 'googleads.yaml')
-        
-        with open(yaml_path, 'w') as f:
-            f.write(yaml_content)
-        
-        print(f"DEBUG: Created googleads.yaml from GOOGLEADS_YAML_CONTENT at: {yaml_path}")
-        return yaml_path
-    
-    # Fallback to GOOGLE_SERVICE_ACCOUNT_JSON
+    # Try GOOGLE_SERVICE_ACCOUNT_JSON first (preferred method)
     service_account_json = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')
     if service_account_json and service_account_json != 'REPLACE_WITH_YOUR_ACTUAL_SERVICE_ACCOUNT_JSON':
         print("DEBUG: Using GOOGLE_SERVICE_ACCOUNT_JSON")
@@ -37,8 +24,21 @@ def create_googleads_yaml_from_env():
         print(f"DEBUG: Created googleads.yaml from GOOGLE_SERVICE_ACCOUNT_JSON at: {yaml_path}")
         return yaml_path
     
+    # Fallback to GOOGLEADS_YAML_CONTENT
+    yaml_content = os.environ.get('GOOGLEADS_YAML_CONTENT')
+    if yaml_content:
+        print("DEBUG: Using GOOGLEADS_YAML_CONTENT")
+        temp_dir = tempfile.gettempdir()
+        yaml_path = os.path.join(temp_dir, 'googleads.yaml')
+        
+        with open(yaml_path, 'w') as f:
+            f.write(yaml_content)
+        
+        print(f"DEBUG: Created googleads.yaml from GOOGLEADS_YAML_CONTENT at: {yaml_path}")
+        return yaml_path
+    
     print("DEBUG: No environment variables found, using local file")
-    raise ValueError("Neither GOOGLEADS_YAML_CONTENT nor GOOGLE_SERVICE_ACCOUNT_JSON environment variables are set")
+    raise ValueError("Neither GOOGLE_SERVICE_ACCOUNT_JSON nor GOOGLEADS_YAML_CONTENT environment variables are set")
 
 def setup_googleads_for_render():
     """Setup Google Ad Manager credentials for Render deployment"""
