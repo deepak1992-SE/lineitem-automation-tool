@@ -90,6 +90,46 @@
         .required {
             color: red;
         }
+        .add-row-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .add-row-btn:hover {
+            background: #218838;
+        }
+        #ranges-table th {
+            background: #f8f9fa;
+            padding: 8px;
+            text-align: left;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+        }
+        #ranges-table td {
+            padding: 4px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        #ranges-table input, #ranges-table select {
+            margin: 0;
+            padding: 6px 8px;
+            font-size: 0.9em;
+        }
+        #ranges-table button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+        #ranges-table button:hover {
+            background: #c82333;
+        }
     </style>
 </head>
 <body>
@@ -183,6 +223,9 @@
 
                 <!-- Line Item Ranges: -->
                 <label>Line Item Ranges:</label>
+                <small style="color: #666; font-size: 0.9em; display: block; margin-bottom: 8px;">
+                    💡 <strong>Granularity Tips:</strong> Use positive values (e.g., 0.01, 0.05, 0.10) for price increments, or -1 for catch-all buckets that target entire ranges.
+                </small>
                 <table id="ranges-table" style="width:100%; margin-bottom:18px; border-collapse:collapse;">
                     <thead>
                         <tr>
@@ -197,9 +240,9 @@
                         {% if form_data and form_data.ranges_count is defined and form_data.ranges_count|int > 0 %}
                             {% for i in range(form_data.ranges_count|int) %}
                             <tr>
-                                <td><input type="number" step="any" name="start_range_{{i}}" value="{{ form_data['start_range_' ~ i] }}" required></td>
-                                <td><input type="number" step="any" name="end_range_{{i}}" value="{{ form_data['end_range_' ~ i] }}" required></td>
-                                <td><input type="number" step="any" name="granularity_{{i}}" value="{{ form_data['granularity_' ~ i] }}" required></td>
+                                <td><input type="number" step="any" name="start_range_{{i}}" value="{{ form_data['start_range_' ~ i] }}" required oninput="calculateTotals()"></td>
+                                <td><input type="number" step="any" name="end_range_{{i}}" value="{{ form_data['end_range_' ~ i] }}" required oninput="calculateTotals()"></td>
+                                <td><input type="number" step="any" name="granularity_{{i}}" value="{{ form_data['granularity_' ~ i] }}" required oninput="calculateTotals()"></td>
                                 <td>
                                     <select name="rate_id_{{i}}" required>
                                         <option value="1" {% if form_data['rate_id_' ~ i] == '1' %}selected{% endif %}>1 (Average)</option>
@@ -211,9 +254,9 @@
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td><input type="number" step="any" name="start_range_0" required></td>
-                                <td><input type="number" step="any" name="end_range_0" required></td>
-                                <td><input type="number" step="any" name="granularity_0" required></td>
+                                <td><input type="number" step="any" name="start_range_0" required oninput="calculateTotals()"></td>
+                                <td><input type="number" step="any" name="end_range_0" required oninput="calculateTotals()"></td>
+                                <td><input type="number" step="any" name="granularity_0" required oninput="calculateTotals()"></td>
                                 <td>
                                     <select name="rate_id_0" required>
                                         <option value="1">1 (Average)</option>
@@ -227,6 +270,27 @@
                 </table>
                 <input type="hidden" id="ranges_count" name="ranges_count" value="{{ form_data.ranges_count if form_data and form_data.ranges_count is defined else 1 }}">
                 <button type="button" onclick="addRow()" class="add-row-btn">Add Row</button>
+                
+                <!-- Calculation Display -->
+                <div id="calculation-display" style="margin-top: 20px; padding: 16px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #0096e6;">
+                    <h4 style="margin: 0 0 12px 0; color: #0096e6; font-size: 1.1em;">📊 Calculation Summary</h4>
+                    <div id="calculation-content">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 12px;">
+                            <div>
+                                <strong>Line Items:</strong> <span id="lineitem-count">0</span>
+                                <div style="font-size: 0.9em; color: #666;">Max per order: 450</div>
+                            </div>
+                            <div>
+                                <strong>Total Creatives:</strong> <span id="creative-count">0</span>
+                                <div style="font-size: 0.9em; color: #666;">Max per advertiser: 10,000</div>
+                            </div>
+                        </div>
+                        <div id="limit-warnings" style="margin-top: 12px;"></div>
+                        <div style="font-size: 0.85em; color: #666; margin-top: 8px;">
+                            📖 <a href="https://support.google.com/admanager/answer/1628457?hl=en" target="_blank" style="color: #0096e6;">Google Ad Manager Limits Documentation</a>
+                        </div>
+                    </div>
+                </div>
                 <script>
                 // Currency exchange toggle functionality
                 document.addEventListener('DOMContentLoaded', function() {
@@ -253,9 +317,9 @@
                     var rowCount = table.rows.length;
                     var row = table.insertRow(-1);
                     row.innerHTML = `
-                        <td><input type="number" step="any" name="start_range_${rowCount}" required></td>
-                        <td><input type="number" step="any" name="end_range_${rowCount}" required></td>
-                        <td><input type="number" step="any" name="granularity_${rowCount}" required></td>
+                        <td><input type="number" step="any" name="start_range_${rowCount}" required oninput="calculateTotals()"></td>
+                        <td><input type="number" step="any" name="end_range_${rowCount}" required oninput="calculateTotals()"></td>
+                        <td><input type="number" step="any" name="granularity_${rowCount}" required oninput="calculateTotals()"></td>
                         <td>
                             <select name="rate_id_${rowCount}" required>
                                 <option value="1">1 (Average)</option>
@@ -265,6 +329,7 @@
                         <td><button type="button" onclick="removeRow(this)">Remove</button></td>
                     `;
                     document.getElementById('ranges_count').value = rowCount + 1;
+                    calculateTotals();
                 }
                 function removeRow(btn) {
                     var row = btn.parentNode.parentNode;
@@ -281,7 +346,96 @@
                         if (selects.length > 0) selects[0].name = 'rate_id_' + i;
                     }
                     document.getElementById('ranges_count').value = rows.length;
+                    calculateTotals();
                 }
+                
+                function calculateTotals() {
+                    const table = document.getElementById('ranges-table').getElementsByTagName('tbody')[0];
+                    const rows = table.getElementsByTagName('tr');
+                    let totalLineItems = 0;
+                    let hasErrors = false;
+                    
+                    for (let i = 0; i < rows.length; i++) {
+                        const inputs = rows[i].getElementsByTagName('input');
+                        if (inputs.length >= 3) {
+                            const startRange = parseFloat(inputs[0].value) || 0;
+                            const endRange = parseFloat(inputs[1].value) || 0;
+                            const granularity = parseFloat(inputs[2].value) || 0;
+                            
+                            if (startRange > 0 && endRange > 0 && granularity !== 0) {
+                                if (granularity === -1) {
+                                    // Catch-all: one line item for the whole range
+                                    totalLineItems += 1;
+                                } else if (granularity > 0) {
+                                    // Calculate number of buckets based on actual backend logic
+                                    let current = startRange;
+                                    let bucketCount = 0;
+                                    while (current <= endRange + 0.00001) { // small epsilon for float precision
+                                        bucketCount++;
+                                        current += granularity;
+                                    }
+                                    totalLineItems += Math.max(1, bucketCount);
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Get number of creatives per line item
+                    const numCreativesInput = document.querySelector('input[name="num_creatives"]');
+                    const numCreatives = parseInt(numCreativesInput?.value) || 1;
+                    const totalCreatives = totalLineItems * numCreatives;
+                    
+                    // Update display
+                    document.getElementById('lineitem-count').textContent = totalLineItems;
+                    document.getElementById('creative-count').textContent = totalCreatives;
+                    
+                    // Check limits and show warnings
+                    const warningsDiv = document.getElementById('limit-warnings');
+                    let warnings = [];
+                    
+                    // Google Ad Manager limits
+                    const MAX_LINE_ITEMS_PER_ORDER = 450;
+                    const MAX_CREATIVES_PER_ADVERTISER = 10000;
+                    
+                    if (totalLineItems > MAX_LINE_ITEMS_PER_ORDER) {
+                        warnings.push(`⚠️ <strong>Line Items Limit Exceeded:</strong> ${totalLineItems} line items exceed the maximum of ${MAX_LINE_ITEMS_PER_ORDER} per order.`);
+                    }
+                    
+                    if (totalCreatives > MAX_CREATIVES_PER_ADVERTISER) {
+                        warnings.push(`⚠️ <strong>Creatives Limit Exceeded:</strong> ${totalCreatives} creatives exceed the maximum of ${MAX_CREATIVES_PER_ADVERTISER} per advertiser.`);
+                    }
+                    
+                    // Performance warnings
+                    if (totalLineItems > 200) {
+                        warnings.push(`💡 <strong>Performance Note:</strong> ${totalLineItems} line items may impact performance. Consider reducing granularity.`);
+                    }
+                    
+                    if (warnings.length > 0) {
+                        warningsDiv.innerHTML = warnings.map(w => `<div style="margin: 4px 0; padding: 8px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; font-size: 0.9em;">${w}</div>`).join('');
+                    } else if (totalLineItems > 0) {
+                        warningsDiv.innerHTML = '<div style="margin: 4px 0; padding: 8px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; font-size: 0.9em; color: #155724;">✅ <strong>All limits OK!</strong> Ready to create line items.</div>';
+                    } else {
+                        warningsDiv.innerHTML = '';
+                    }
+                }
+                
+                // Add event listeners to existing inputs
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Add calculation triggers to existing range inputs
+                    const rangeInputs = document.querySelectorAll('input[name^="start_range_"], input[name^="end_range_"], input[name^="granularity_"]');
+                    rangeInputs.forEach(input => {
+                        input.addEventListener('input', calculateTotals);
+                    });
+                    
+                    // Add calculation trigger to num_creatives input
+                    const numCreativesInput = document.querySelector('input[name="num_creatives"]');
+                    if (numCreativesInput) {
+                        numCreativesInput.addEventListener('input', calculateTotals);
+                    }
+                    
+                    // Initial calculation
+                    calculateTotals();
+                });
                 </script>
 
                 <!-- Progress Bar -->

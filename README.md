@@ -8,6 +8,7 @@ A Flask web application for automating the creation of line items in Google Ad M
 - **Currency Exchange Support**: Convert prices between USD, INR, EUR, GBP, and JPY
 - **Price Bucket Targeting**: Generate `pwtecp` values for precise price range targeting
 - **Bidder Code Targeting**: Target specific demand partners using `pwtpid` values
+- **Real-time Calculation**: Live calculation of line items and creatives with Google Ad Manager limit validation
 - **Flexible Configuration**: Customize start/end prices, granularity, and currency settings
 - **Web Interface**: User-friendly HTML form for easy configuration
 
@@ -74,11 +75,12 @@ The application supports currency exchange with the following currencies:
 3. **Configure line items**:
    - **Start Price**: Beginning of the price range
    - **End Price**: End of the price range
-   - **Granularity**: Price increment between line items
+   - **Granularity**: Price increment between line items (use -1 for catch-all buckets)
    - **Currency Code**: Base currency for calculations
    - **Currency Exchange**: Enable to convert prices to target currency
    - **Target Currency**: Currency to convert prices to (when exchange is enabled)
    - **Bidder Code**: Optional bidder code to target specific demand partners (e.g., pubmatic, appnexus, rubicon)
+   - **Real-time Preview**: See calculated line items and creatives with limit validation
 
 ## How It Works
 
@@ -109,6 +111,25 @@ Each price bucket creates a line item with:
 - Bidder targeting using `pwtpid` values (when bidder code is specified)
 - Appropriate currency settings
 - Optimized for Google Ad Manager integration
+
+### Real-time Calculation & Validation
+
+The application provides live calculation and validation:
+
+#### **Calculation Display**
+- **Line Items**: Shows total number of line items that will be created
+- **Creatives**: Shows total creatives (line items × creatives per line item)
+- **Live Updates**: Calculations update as you modify ranges and settings
+
+#### **Google Ad Manager Limits**
+- **Line Items per Order**: Maximum 450 (enforced by Google)
+- **Creatives per Advertiser**: Maximum 10,000 (enforced by Google)
+- **Performance Warning**: Alert when exceeding 200 line items (recommended limit)
+
+#### **Granularity Options**
+- **Positive Values** (e.g., 0.01, 0.05, 0.10): Creates multiple line items with precise price increments
+- **Catch-all (-1)**: Creates single line item targeting entire price range
+- **Example**: Range 5.00-7.00 with 0.01 granularity = 200 line items
 
 ## File Structure
 
