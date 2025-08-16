@@ -5,65 +5,38 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 # Check if we're on Render and use environment variable
 print(f"DEBUG: RENDER environment variable: {os.environ.get('RENDER')}")
 print(f"DEBUG: GOOGLE_SERVICE_ACCOUNT_JSON exists: {bool(os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON'))}")
-print(f"DEBUG: GOOGLE_SERVICE_ACCOUNT_JSON length: {len(os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON', ''))}")
-print(f"DEBUG: GOOGLE_SERVICE_ACCOUNT_JSON starts with: {os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON', '')[:50]}...")
 
 if os.environ.get('RENDER'):
     print("DEBUG: Running on Render, setting up environment-based configuration")
     # On Render, create googleads.yaml from environment variable
     import tempfile
-    
-    # Try GOOGLE_SERVICE_ACCOUNT_JSON first (preferred method)
-    service_account_json = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')
-    print(f"DEBUG: Service account JSON length: {len(service_account_json) if service_account_json else 0}")
-    if service_account_json and service_account_json != 'REPLACE_WITH_YOUR_ACTUAL_SERVICE_ACCOUNT_JSON':
-        print("DEBUG: Using GOOGLE_SERVICE_ACCOUNT_JSON")
+    yaml_content = os.environ.get('GOOGLEADS_YAML_CONTENT')
+    if yaml_content:
+        print("DEBUG: Using GOOGLEADS_YAML_CONTENT")
         temp_dir = tempfile.gettempdir()
-        
-        # Create temporary JSON file
-        json_path = os.path.join(temp_dir, 'service_account.json')
-        with open(json_path, 'w') as f:
-            f.write(service_account_json)
-        print(f"DEBUG: Created service account JSON at: {json_path}")
-        
-        # Create YAML file that references the JSON file
         yaml_path = os.path.join(temp_dir, 'googleads.yaml')
-        yaml_content = f"""ad_manager:
-  application_name: API-Access
-  network_code: '15671365'
-  path_to_private_key_file: {json_path}"""
-        
         with open(yaml_path, 'w') as f:
             f.write(yaml_content)
         GOOGLEADS_YAML_FILE = yaml_path
         print(f"DEBUG: Created googleads.yaml at: {yaml_path}")
-        print(f"DEBUG: YAML content length: {len(yaml_content)}")
-        print(f"DEBUG: YAML content preview: {yaml_content[:200]}...")
-        
-        # Verify the files were created correctly
-        with open(yaml_path, 'r') as f:
-            file_content = f.read()
-            print(f"DEBUG: YAML file content length: {len(file_content)}")
-            print(f"DEBUG: YAML file content preview: {file_content[:200]}...")
-        
-        with open(json_path, 'r') as f:
-            json_content = f.read()
-            print(f"DEBUG: JSON file content length: {len(json_content)}")
-            print(f"DEBUG: JSON file content preview: {json_content[:200]}...")
     else:
-        # Fallback: try GOOGLEADS_YAML_CONTENT
-        yaml_content = os.environ.get('GOOGLEADS_YAML_CONTENT')
-        if yaml_content:
-            print("DEBUG: Using GOOGLEADS_YAML_CONTENT")
+        # Fallback: create googleads.yaml with embedded service account
+        service_account_json = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')
+        if service_account_json and service_account_json != 'REPLACE_WITH_YOUR_ACTUAL_SERVICE_ACCOUNT_JSON':
+            print("DEBUG: Using GOOGLE_SERVICE_ACCOUNT_JSON")
             temp_dir = tempfile.gettempdir()
             yaml_path = os.path.join(temp_dir, 'googleads.yaml')
+            yaml_content = f"""ad_manager:
+  application_name: API-Access
+  network_code: '15671365'
+  service_account_json: |
+{chr(10).join('    ' + line for line in service_account_json.split(chr(10)))}"""
             with open(yaml_path, 'w') as f:
                 f.write(yaml_content)
             GOOGLEADS_YAML_FILE = yaml_path
             print(f"DEBUG: Created googleads.yaml at: {yaml_path}")
         else:
             print("DEBUG: Using fallback local googleads.yaml")
-            print(f"DEBUG: Service account JSON value: {service_account_json}")
             GOOGLEADS_YAML_FILE = os.path.join(ROOT_DIR, 'googleads.yaml')
 else:
     print("DEBUG: Running locally, using local googleads.yaml")

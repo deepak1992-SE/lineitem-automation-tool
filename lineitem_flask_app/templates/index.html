@@ -147,6 +147,13 @@
                     <option value="ADPOD" {% if creative_type == 'ADPOD' %}selected{% endif %}>ADPOD</option>
                 </select>
 
+                <!-- Bidder Code: Optional -->
+                <label>Bidder Code (pwtpid): <span class="optional">(Optional)</span></label>
+                <input type="text" name="bidder_code" value="{{ form_data.bidder_code if form_data and form_data.bidder_code is defined else '' }}" placeholder="e.g., pubmatic, appnexus, rubicon">
+                <small style="color: #666; font-size: 0.9em; display: block; margin-top: -12px; margin-bottom: 18px;">
+                    Enter the bidder code to target specific demand partners. Leave empty to target all bidders.
+                </small>
+
                 <!-- Creative Sizes: Mandatory -->
                 <label>Creative Sizes (comma separated, e.g. 300x250,728x90): <span class="required">*</span></label>
                 <input type="text" name="creative_sizes" value="" required>

@@ -262,9 +262,13 @@ def index():
                             })
                             current = round(current + gran, 8)
 
+            # Get bidder code from form
+            bidder_code = form.get('bidder_code', '').strip() or None
+            
             logging.debug(f"Expanded price_els = {expanded_prices}")
+            logging.debug(f"Bidder code = {bidder_code}")
 
-            key_gen_obj = OpenWrapTargetingKeyGen(price_els=expanded_prices, creative_type=canonical_pwtplt)
+            key_gen_obj = OpenWrapTargetingKeyGen(price_els=expanded_prices, creative_type=canonical_pwtplt, bidder_code=bidder_code)
 
             # Ensure order exists
             order_id = get_order_id_by_name(order_name)

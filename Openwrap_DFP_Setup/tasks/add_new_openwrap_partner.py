@@ -1,17 +1,20 @@
 from Openwrap_DFP_Setup.tasks.dfp_utils import DFPValueIdGetter, get_or_create_dfp_targeting_key
 
 class OpenWrapTargetingKeyGen:
-    def __init__(self, price_els=None, creative_type=None):
+    def __init__(self, price_els=None, creative_type=None, bidder_code=None):
         self.price_els = price_els or []
         self.creative_type = creative_type or 'WEB'
-        # Get or create targeting keys for pwtecp, pwtplt, and pwtbst
+        self.bidder_code = bidder_code
+        # Get or create targeting keys for pwtecp, pwtplt, pwtbst, and pwtpid
         self.pwtecp_key_id = get_or_create_dfp_targeting_key('pwtecp')
         self.pwtplt_key_id = get_or_create_dfp_targeting_key('pwtplt')
         self.pwtbst_key_id = get_or_create_dfp_targeting_key('pwtbst')
+        self.pwtpid_key_id = get_or_create_dfp_targeting_key('pwtpid')
         # Default value getter for granular buckets (EXACT)
         self.pwtecp_value_getter = DFPValueIdGetter('pwtecp')
         self.pwtplt_value_getter = DFPValueIdGetter('pwtplt')
         self.pwtbst_value_getter = DFPValueIdGetter('pwtbst')
+        self.pwtpid_value_getter = DFPValueIdGetter('pwtpid')
 
     def get_dfp_targeting(self):
         print("DEBUG: self.price_els =", self.price_els)
@@ -71,5 +74,17 @@ class OpenWrapTargetingKeyGen:
                 'operator': 'IS'
             }
             top_level_targeting['children'].append(child_pwtbst)
+            
+            # pwtpid: bidder code (if provided)
+            if self.bidder_code:
+                pwtpid_value_id = self.pwtpid_value_getter.get_value_id(self.bidder_code)
+                child_pwtpid = {
+                    'xsi_type': 'CustomCriteria',
+                    'keyId': self.pwtpid_key_id,
+                    'valueIds': [pwtpid_value_id],
+                    'operator': 'IS'
+                }
+                top_level_targeting['children'].append(child_pwtpid)
+            
             targeting_sets.append(top_level_targeting)
         return targeting_sets

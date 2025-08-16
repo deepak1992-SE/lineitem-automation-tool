@@ -7,6 +7,7 @@ A Flask web application for automating the creation of line items in Google Ad M
 - **Automated Line Item Creation**: Create multiple line items in Google Ad Manager with custom targeting
 - **Currency Exchange Support**: Convert prices between USD, INR, EUR, GBP, and JPY
 - **Price Bucket Targeting**: Generate `pwtecp` values for precise price range targeting
+- **Bidder Code Targeting**: Target specific demand partners using `pwtpid` values
 - **Flexible Configuration**: Customize start/end prices, granularity, and currency settings
 - **Web Interface**: User-friendly HTML form for easy configuration
 
@@ -77,6 +78,7 @@ The application supports currency exchange with the following currencies:
    - **Currency Code**: Base currency for calculations
    - **Currency Exchange**: Enable to convert prices to target currency
    - **Target Currency**: Currency to convert prices to (when exchange is enabled)
+   - **Bidder Code**: Optional bidder code to target specific demand partners (e.g., pubmatic, appnexus, rubicon)
 
 ## How It Works
 
@@ -102,7 +104,9 @@ When currency exchange is enabled:
 ### Line Item Creation
 
 Each price bucket creates a line item with:
-- Custom targeting using `pwtecp` values
+- Custom targeting using `pwtecp` values for price ranges
+- Platform targeting using `pwtplt` values
+- Bidder targeting using `pwtpid` values (when bidder code is specified)
 - Appropriate currency settings
 - Optimized for Google Ad Manager integration
 
