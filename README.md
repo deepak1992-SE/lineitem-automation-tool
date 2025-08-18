@@ -110,6 +110,7 @@ Each price bucket creates a line item with:
 - Custom targeting using `pwtecp` values for price ranges
 - Platform targeting using `pwtplt` values
 - Bidder targeting using `pwtpid` values (when bidder code is specified)
+- Clean, concise naming format: `HB $X.XX` (without "Top Bid" prefix)
 - Appropriate currency settings
 - Optimized for Google Ad Manager integration
 
