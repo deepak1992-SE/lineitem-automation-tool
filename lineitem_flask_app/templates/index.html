@@ -144,7 +144,7 @@
             <form method="POST" enctype="multipart/form-data">
                 <!-- Order Name: Mandatory -->
                 <label>Order Name: <span class="required">*</span></label>
-                <input type="text" name="order_name" value="" required>
+                <input type="text" name="order_name" id="order_name" value="" required>
 
                 <!-- User Email: Mandatory -->
                 <label>User Email: <span class="required">*</span></label>
@@ -152,7 +152,7 @@
 
                 <!-- Advertiser Name: Mandatory -->
                 <label>Advertiser Name: <span class="required">*</span></label>
-                <input type="text" name="advertiser_name" value="{{ form_data.advertiser_name if form_data and form_data.advertiser_name is defined else settings.DFP_ADVERTISER_NAME }}" required>
+                <input type="text" name="advertiser_name" id="advertiser_name" value="{{ form_data.advertiser_name if form_data and form_data.advertiser_name is defined else settings.DFP_ADVERTISER_NAME }}" required>
 
                 <!-- Network Code: Mandatory -->
                 <label>Network Code: <span class="required">*</span></label>
@@ -160,7 +160,7 @@
 
                 <!-- Line Item Name Prefix: Optional -->
                 <label>Line Item Name Prefix: <span class="optional">(Optional)</span></label>
-                <input type="text" name="lineitem_prefix" value="{{ form_data.lineitem_prefix if form_data and form_data.lineitem_prefix is defined else '' }}">
+                <input type="text" name="lineitem_prefix" id="lineitem_prefix" value="{{ form_data.lineitem_prefix if form_data and form_data.lineitem_prefix is defined else '' }}">
 
                 <!-- Line Item Type: Mandatory -->
                 <label>Line Item Type: <span class="required">*</span></label>
@@ -187,9 +187,16 @@
                     <option value="ADPOD" {% if creative_type == 'ADPOD' %}selected{% endif %}>ADPOD</option>
                 </select>
 
+                <!-- Bidder Name: Optional -->
+                <label>Bidder Name: <span class="optional">(Optional)</span></label>
+                <input type="text" name="bidder_name" id="bidder_name" value="{{ form_data.bidder_name if form_data and form_data.bidder_name is defined else '' }}" placeholder="e.g., PubMatic, AppNexus, Rubicon" oninput="updateBidderFields()">
+                <small style="color: #666; font-size: 0.9em; display: block; margin-top: -12px; margin-bottom: 18px;">
+                    Enter the bidder name for auto-generation of order name, advertiser name, and line item prefix.
+                </small>
+
                 <!-- Bidder Code: Optional -->
                 <label>Bidder Code (pwtpid): <span class="optional">(Optional)</span></label>
-                <input type="text" name="bidder_code" value="{{ form_data.bidder_code if form_data and form_data.bidder_code is defined else '' }}" placeholder="e.g., pubmatic, appnexus, rubicon">
+                <input type="text" name="bidder_code" id="bidder_code" value="{{ form_data.bidder_code if form_data and form_data.bidder_code is defined else '' }}" placeholder="e.g., pubmatic, appnexus, rubicon" oninput="updateBidderFields()">
                 <small style="color: #666; font-size: 0.9em; display: block; margin-top: -12px; margin-bottom: 18px;">
                     Enter the bidder code to target specific demand partners. Leave empty to target all bidders.
                 </small>
@@ -292,6 +299,60 @@
                     </div>
                 </div>
                 <script>
+                // Bidder fields auto-generation functionality
+                function updateBidderFields() {
+                    const bidderName = document.getElementById('bidder_name').value.trim();
+                    const bidderCode = document.getElementById('bidder_code').value.trim();
+                    
+                    // Only auto-generate if both bidder name and code are provided
+                    if (bidderName && bidderCode) {
+                        // Auto-generate Order Name: 'Openwrap-' + BIDDER_NAME + '-Display1'
+                        const orderName = `Openwrap-${bidderName}-Display1`;
+                        document.getElementById('order_name').value = orderName;
+                        
+                        // Auto-generate Advertiser Name: "Network OpenWrap " + BIDDER_NAME
+                        const advertiserName = `Network OpenWrap ${bidderName}`;
+                        document.getElementById('advertiser_name').value = advertiserName;
+                        
+                        // Auto-generate Line Item Prefix: 'OpenWrap-' + BIDDER_NAME + '-display'
+                        const lineItemPrefix = `OpenWrap-${bidderName}-display`;
+                        document.getElementById('lineitem_prefix').value = lineItemPrefix;
+                        
+                        // Add visual feedback
+                        showAutoGenerationFeedback();
+                    } else {
+                        // Clear auto-generated values if either field is empty
+                        if (!bidderName && !bidderCode) {
+                            document.getElementById('order_name').value = '';
+                            document.getElementById('advertiser_name').value = '{{ settings.DFP_ADVERTISER_NAME }}';
+                            document.getElementById('lineitem_prefix').value = '';
+                        }
+                    }
+                }
+                
+                function showAutoGenerationFeedback() {
+                    // Create or update feedback message
+                    let feedbackDiv = document.getElementById('bidder-feedback');
+                    if (!feedbackDiv) {
+                        feedbackDiv = document.createElement('div');
+                        feedbackDiv.id = 'bidder-feedback';
+                        feedbackDiv.style.cssText = 'margin: 8px 0; padding: 8px 12px; background: #e3f2fd; border: 1px solid #2196f3; border-radius: 4px; font-size: 0.9em; color: #1565c0;';
+                        
+                        // Insert after bidder code field
+                        const bidderCodeField = document.getElementById('bidder_code').parentNode;
+                        bidderCodeField.insertAdjacentElement('afterend', feedbackDiv);
+                    }
+                    
+                    feedbackDiv.innerHTML = '✨ <strong>Auto-generated:</strong> Order name, advertiser name, and line item prefix have been automatically populated based on your bidder information.';
+                    
+                    // Auto-hide after 5 seconds
+                    setTimeout(() => {
+                        if (feedbackDiv) {
+                            feedbackDiv.style.opacity = '0.7';
+                        }
+                    }, 5000);
+                }
+
                 // Currency exchange toggle functionality
                 document.addEventListener('DOMContentLoaded', function() {
                     const currencyExchangeCheckbox = document.querySelector('input[name="currency_exchange"]');

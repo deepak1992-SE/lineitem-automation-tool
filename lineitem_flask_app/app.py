@@ -262,10 +262,24 @@ def index():
                             })
                             current = round(current + gran, 8)
 
-            # Get bidder code from form
+            # Get bidder name and code from form
+            bidder_name = form.get('bidder_name', '').strip() or None
             bidder_code = form.get('bidder_code', '').strip() or None
             
+            # Auto-generate names if both bidder name and code are provided
+            if bidder_name and bidder_code:
+                # Override form values with auto-generated ones
+                order_name = f'Openwrap-{bidder_name}-Display1'
+                advertiser_name = f'Network OpenWrap {bidder_name}'
+                lineitem_prefix = f'OpenWrap-{bidder_name}-display'
+                
+                logging.debug(f"Auto-generated names for bidder '{bidder_name}':")
+                logging.debug(f"  Order Name: {order_name}")
+                logging.debug(f"  Advertiser Name: {advertiser_name}")
+                logging.debug(f"  Line Item Prefix: {lineitem_prefix}")
+            
             logging.debug(f"Expanded price_els = {expanded_prices}")
+            logging.debug(f"Bidder name = {bidder_name}")
             logging.debug(f"Bidder code = {bidder_code}")
 
             key_gen_obj = OpenWrapTargetingKeyGen(price_els=expanded_prices, creative_type=canonical_pwtplt, bidder_code=bidder_code)

@@ -79,6 +79,7 @@ The application supports currency exchange with the following currencies:
    - **Currency Code**: Base currency for calculations
    - **Currency Exchange**: Enable to convert prices to target currency
    - **Target Currency**: Currency to convert prices to (when exchange is enabled)
+   - **Bidder Name**: Optional bidder name for auto-generation of naming conventions
    - **Bidder Code**: Optional bidder code to target specific demand partners (e.g., pubmatic, appnexus, rubicon)
    - **Real-time Preview**: See calculated line items and creatives with limit validation
 
@@ -130,6 +131,31 @@ The application provides live calculation and validation:
 - **Positive Values** (e.g., 0.01, 0.05, 0.10): Creates multiple line items with precise price increments
 - **Catch-all (-1)**: Creates single line item targeting entire price range
 - **Example**: Range 5.00-7.00 with 0.01 granularity = 200 line items
+
+### Auto-Generation of Naming Conventions
+
+When both **Bidder Name** and **Bidder Code** are provided, the application automatically generates:
+
+#### **Auto-Generated Fields**
+- **Order Name**: `Openwrap-{BIDDER_NAME}-Display1`
+- **Advertiser Name**: `Network OpenWrap {BIDDER_NAME}`
+- **Line Item Prefix**: `OpenWrap-{BIDDER_NAME}-display`
+
+#### **Example Auto-Generation**
+If you enter:
+- **Bidder Name**: `PubMatic`
+- **Bidder Code**: `pubmatic`
+
+The system automatically populates:
+- **Order Name**: `Openwrap-PubMatic-Display1`
+- **Advertiser Name**: `Network OpenWrap PubMatic`
+- **Line Item Prefix**: `OpenWrap-PubMatic-display`
+
+#### **Benefits**
+- **Consistent Naming**: Ensures standardized naming across all bidder setups
+- **Time Saving**: No need to manually type repetitive naming patterns
+- **Error Prevention**: Reduces typos and naming inconsistencies
+- **Easy Management**: Makes it easier to identify and manage bidder-specific campaigns
 
 ## File Structure
 
