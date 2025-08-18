@@ -38,15 +38,15 @@ def get_order_by_name(order_name):
 
   no_order_found = False
   try:
-    no_order_found = True if len(response['results']) < 1 else False 
+    no_order_found = True if len(response.results) < 1 else False 
   except (AttributeError, KeyError):
     no_order_found = True
 
   if no_order_found:
     return None
   else:
-    order = response['results'][0]
-    #logger.info(u'Found an order with name "{name}".'.format(name=order['name']))
+    order = response.results[0]
+    #logger.info(u'Found an order with name "{name}".'.format(name=order.name))
     return order
 
 def get_all_orders(print_orders=False):
@@ -70,9 +70,9 @@ def get_all_orders(print_orders=False):
   # through until all orders have been retrieved.
   while True:
     response = order_service.getOrdersByStatement(statement.ToStatement())
-    if 'results' in response and len(response['results']) > 0:
-      for order in response['results']:
-        msg = u'Found an order with name "{name}"  id({id}).'.format(name=order['name'],id=order['id'])
+    if hasattr(response, 'results') and response.results and len(response.results) > 0:
+      for order in response.results:
+        msg = u'Found an order with name "{name}"  id({id}).'.format(name=order.name,id=order.id)
         if print_orders:
           print(msg)
       statement.offset += ad_manager.SUGGESTED_PAGE_LIMIT

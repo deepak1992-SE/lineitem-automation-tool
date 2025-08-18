@@ -39,7 +39,7 @@ def get_user_id_by_email(email_address):
   # A user is required.
   no_user_found = False
   try:
-    no_user_found = True if len(response['results']) < 1 else False 
+    no_user_found = True if len(response.results) < 1 else False 
   except (AttributeError, KeyError):
     no_user_found = True
 
@@ -47,11 +47,11 @@ def get_user_id_by_email(email_address):
     raise DFPObjectNotFound('No DFP user found with given email address.')
 
   # Only get the first user in case there are multiple matches.
-  user = response['results'][0]
+  user = response.results[0]
 
   logger.info(u'Found user with the given email address.')
 
-  return user['id']
+  return user.id
 
 def main():
   """

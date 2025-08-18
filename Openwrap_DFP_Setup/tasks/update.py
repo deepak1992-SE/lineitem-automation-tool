@@ -227,7 +227,7 @@ Confirm the Input:
         If the update is successful, the names of the updated line items are logged.
         """
         response = self.get_line_items()
-        line_items = response['results'] if 'results' in response else []
+        line_items = response.results if hasattr(response, 'results') and response.results else []
         if len(line_items) <= 0:
             self.logger.info("No line item found for given input")
             return

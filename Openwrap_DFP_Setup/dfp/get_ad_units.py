@@ -43,7 +43,7 @@ def get_ad_unit_by_name(ad_unit_name):
 
   no_ad_unit_found = False
   try:
-    no_ad_unit_found = True if len(response['results']) < 1 else False 
+    no_ad_unit_found = True if len(response.results) < 1 else False
   except (AttributeError, KeyError):
     no_ad_unit_found = True
 
@@ -51,8 +51,8 @@ def get_ad_unit_by_name(ad_unit_name):
     raise DFPObjectNotFound('No DFP ad_unit found with name {0}'.format(
       ad_unit_name))
   else:
-    ad_unit = response['results'][0]
-    logger.info(u'Found ad_unit with name "{name}".'.format(name=ad_unit['name']))
+    ad_unit = response.results[0]
+    logger.info(u'Found ad_unit with name "{name}".'.format(name=ad_unit.name))
   return ad_unit
 
 def get_ad_unit_ids_by_name(ad_unit_names):
@@ -66,7 +66,7 @@ def get_ad_unit_ids_by_name(ad_unit_names):
   """  
   ad_unit_ids = []
   for ad_unit_name in ad_unit_names:
-    ad_unit_ids.append(get_ad_unit_by_name(ad_unit_name)['id'])
+    ad_unit_ids.append(get_ad_unit_by_name(ad_unit_name).id)
   return ad_unit_ids
 
 def main():

@@ -31,7 +31,7 @@ def get_creative_template_by_name(template_name):
    
     no_creative_template_found = False
     try:
-        no_creative_template_found = True if len(response['results']) < 1 else False 
+        no_creative_template_found = True if len(response.results) < 1 else False
     except (AttributeError, KeyError):
         no_creative_template_found = True
 
@@ -39,9 +39,9 @@ def get_creative_template_by_name(template_name):
         raise DFPObjectNotFound('No DFP creative template found with name {0}'.format(
             template_name))
     else:
-        creative_template = response['results'][0]
+        creative_template = response.results[0]
         #print(creative_template)
-        print('Found creative_template with name "{name}" and id {id}.'.format(name=creative_template['name'], id=creative_template['id']))
+        print('Found creative_template with name "{name}" and id {id}.'.format(name=creative_template.name, id=creative_template.id))
     return creative_template
 
 
@@ -57,7 +57,7 @@ def get_creative_template_ids_by_name(creative_template_names):
   """  
   creative_template_ids = []
   for template_name in creative_template_names:
-    creative_template_ids.append(get_creative_template_by_name(template_name)['id'])
+    creative_template_ids.append(get_creative_template_by_name(template_name).id)
   return creative_template_ids
 
 

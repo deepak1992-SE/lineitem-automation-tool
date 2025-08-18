@@ -33,11 +33,11 @@ def remove_licas(line_item_id):
     response = lica_service.getLineItemCreativeAssociationsByStatement(
         statement.ToStatement())
 
-    if 'results' in response and len(response['results']):
-      for lica in response['results']:
+    if hasattr(response, 'results') and response.results and len(response.results):
+      for lica in response.results:
         print ('LICA with line item id "%s", creative id "%s", and status'
                ' "%s" will be deactivated.' %
-               (lica['lineItemId'], lica['creativeId'], lica['status']))
+               (lica.lineItemId, lica.creativeId, lica.status))
 
       result = lica_service.performLineItemCreativeAssociationAction(
         {'xsi_type': 'DeactivateLineItemCreativeAssociations'},

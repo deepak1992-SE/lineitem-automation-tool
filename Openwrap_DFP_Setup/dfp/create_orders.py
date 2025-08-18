@@ -7,8 +7,9 @@ def get_order_id_by_name(order_name):
     order_service = client.GetService('OrderService', version='v202502')
     query = f"WHERE name = '{order_name}'"
     response = order_service.getOrdersByStatement({'query': query})
-    if 'results' in response and len(response['results']) > 0:
-        return response['results'][0]['id']
+    # Handle API response object properly
+    if hasattr(response, 'results') and response.results and len(response.results) > 0:
+        return response.results[0].id
     return None
 
 def create_order(order_name, advertiser_name, trafficker_email):
@@ -20,9 +21,10 @@ def create_order(order_name, advertiser_name, trafficker_email):
 
     # Get trafficker ID
     users = user_service.getUsersByStatement({'query': f"WHERE email = '{trafficker_email}'"})
-    if not users.get('results'):
+    # Handle API response object properly - check if results exist and have content
+    if not hasattr(users, 'results') or not users.results or len(users.results) == 0:
         raise Exception(f"No user found with email: {trafficker_email}")
-    trafficker_id = users['results'][0]['id']
+    trafficker_id = users.results[0].id
 
     # Get advertiser ID using the proper function that handles creation if needed
     try:
@@ -36,4 +38,4 @@ def create_order(order_name, advertiser_name, trafficker_email):
         'traffickerId': trafficker_id
     }
     created = order_service.createOrders([order])
-    return created[0]['id']
+    return created[0].id

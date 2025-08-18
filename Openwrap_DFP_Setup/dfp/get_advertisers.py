@@ -39,7 +39,7 @@ def create_advertiser(name, advertiser_type="ADVERTISER"):
   # Display results.
   for advertiser in advertisers:
     logger.info(u'Created an advertiser with name "{name}" and '
-      'type "{type}".'.format(name=advertiser['name'], type=advertiser['type']))
+      'type "{type}".'.format(name=advertiser.name, type=advertiser.type))
 
   return advertiser
 
@@ -76,7 +76,7 @@ def get_advertiser_id_by_name(name, advertiser_type="ADVERTISER"):
   # A company is required.
   no_company_found = False
   try:
-    no_company_found = True if len(response['results']) < 1 else False 
+    no_company_found = True if len(response.results) < 1 else False 
   except (AttributeError, KeyError):
     no_company_found = True
 
@@ -85,17 +85,17 @@ def get_advertiser_id_by_name(name, advertiser_type="ADVERTISER"):
       advertiser = create_advertiser(name, advertiser_type)
     else:
       raise DFPObjectNotFound('No advertiser found with name {0}'.format(name))
-  elif len(response['results']) > 1:
+  elif len(response.results) > 1:
     print(response)
     raise BadSettingException(
       'Multiple advertisers found with name {0}'.format(name))
   else:
-    advertiser = response['results'][0]
+    advertiser = response.results[0]
 
   logger.info(u'Using existing advertiser with name "{name}" and '
-    'type "{type}".'.format(name=advertiser['name'], type=advertiser['type']))
+    'type "{type}".'.format(name=advertiser.name, type=advertiser.type))
 
-  return advertiser['id']
+  return advertiser.id
 
 def main():
   """

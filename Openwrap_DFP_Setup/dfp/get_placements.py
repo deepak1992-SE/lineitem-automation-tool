@@ -43,7 +43,7 @@ def get_placement_by_name(placement_name):
 
   no_placement_found = False
   try:
-    no_placement_found = True if len(response['results']) < 1 else False 
+    no_placement_found = True if len(response.results) < 1 else False 
   except (AttributeError, KeyError):
     no_placement_found = True
 
@@ -51,8 +51,8 @@ def get_placement_by_name(placement_name):
     raise DFPObjectNotFound('No DFP placement found with name {0}'.format(
       placement_name))
   else:
-    placement = response['results'][0]
-    logger.info(u'Found placement with name "{name}".'.format(name=placement['name']))
+    placement = response.results[0]
+    logger.info(u'Found placement with name "{name}".'.format(name=placement.name))
   return placement
 
 def get_placement_ids_by_name(placement_names):
@@ -66,7 +66,7 @@ def get_placement_ids_by_name(placement_names):
   """  
   placement_ids = []
   for placement_name in placement_names:
-    placement_ids.append(get_placement_by_name(placement_name)['id'])
+    placement_ids.append(get_placement_by_name(placement_name).id)
   return placement_ids
 
 def main():

@@ -38,8 +38,8 @@ def get_key_id_by_name(name):
       targeting_key_statement.ToStatement())
 
   key_id = None
-  if 'results' in response and len(response['results']) > 0:
-    key_id = response['results'][0]['id']
+  if hasattr(response, 'results') and response.results and len(response.results) > 0:
+    key_id = response.results[0].id
 
   return key_id
 
@@ -75,22 +75,22 @@ def get_targeting_by_key_name(name):
 
   # If the key exists, get predefined values.
   key_values = None
-  if 'results' in response and len(response['results']) > 0:
-    key = response['results'][0]
+  if hasattr(response, 'results') and response.results and len(response.results) > 0:
+    key = response.results[0]
     key_values = []
 
-    query = "WHERE status = 'ACTIVE' AND customTargetingKeyId IN (%s)" % str(key['id'])
+    query = "WHERE status = 'ACTIVE' AND customTargetingKeyId IN (%s)" % str(key.id)
     statement = ad_manager.FilterStatement(query)
 
     response = custom_targeting_service.getCustomTargetingValuesByStatement(
         statement.ToStatement())
-    while 'results' in response and len(response['results']) > 0:
-      for custom_val in response['results']:
+    while hasattr(response, 'results') and response.results and len(response.results) > 0:
+      for custom_val in response.results:
         key_values.append({
-          'id': custom_val['id'],
-          'name': custom_val['name'],
-          'displayName': custom_val['displayName'],
-          'customTargetingKeyId': custom_val['customTargetingKeyId']
+          'id': custom_val.id,
+          'name': custom_val.name,
+          'displayName': custom_val.displayName,
+          'customTargetingKeyId': custom_val.customTargetingKeyId
         })
       statement.offset += ad_manager.SUGGESTED_PAGE_LIMIT
       response = custom_targeting_service.getCustomTargetingValuesByStatement(
