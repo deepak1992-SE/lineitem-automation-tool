@@ -156,7 +156,10 @@
 
                 <!-- Network Code: Mandatory -->
                 <label>Network Code: <span class="required">*</span></label>
-                <input type="text" name="network_code" value="{{ form_data.network_code if form_data and form_data.network_code is defined else '' }}" required>
+                <input type="text" name="network_code" value="{{ form_data.network_code if form_data and form_data.network_code is defined else '' }}" placeholder="e.g., 15671365" required>
+                <small style="color: #666; font-size: 0.9em; display: block; margin-top: -12px; margin-bottom: 18px;">
+                    💡 <strong>Dynamic Network Code:</strong> Enter any network code here - no need to update environment variables!
+                </small>
 
                 <!-- Line Item Name Prefix: Optional -->
                 <label>Line Item Name Prefix: <span class="optional">(Optional)</span></label>

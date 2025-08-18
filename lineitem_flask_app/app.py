@@ -278,7 +278,17 @@ def index():
                 logging.debug(f"  Advertiser Name: {advertiser_name}")
                 logging.debug(f"  Line Item Prefix: {lineitem_prefix}")
             
+            # Setup Google Ads client with the network code from the form
+            if os.environ.get('RENDER') and network_code:
+                try:
+                    from googleads_env import setup_googleads_for_render
+                    setup_googleads_for_render(network_code)
+                    logging.debug(f"Reconfigured Google Ads client with network code: {network_code}")
+                except Exception as e:
+                    logging.warning(f"Failed to reconfigure Google Ads client: {e}")
+            
             logging.debug(f"Expanded price_els = {expanded_prices}")
+            logging.debug(f"Network code = {network_code}")
             logging.debug(f"Bidder name = {bidder_name}")
             logging.debug(f"Bidder code = {bidder_code}")
 

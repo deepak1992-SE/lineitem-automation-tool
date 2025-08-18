@@ -12,18 +12,23 @@ def get_order_id_by_name(order_name):
     return None
 
 def create_order(order_name, advertiser_name, trafficker_email):
+    from Openwrap_DFP_Setup.dfp.get_advertisers import get_advertiser_id_by_name
+    
     client = get_client()
     user_service = client.GetService('UserService', version='v202502')
     order_service = client.GetService('OrderService', version='v202502')
-    company_service = client.GetService('CompanyService', version='v202502')
 
     # Get trafficker ID
     users = user_service.getUsersByStatement({'query': f"WHERE email = '{trafficker_email}'"})
+    if not users.get('results'):
+        raise Exception(f"No user found with email: {trafficker_email}")
     trafficker_id = users['results'][0]['id']
 
-    # Get advertiser ID
-    companies = company_service.getCompaniesByStatement({'query': f"WHERE name = '{advertiser_name}'"})
-    advertiser_id = companies['results'][0]['id']
+    # Get advertiser ID using the proper function that handles creation if needed
+    try:
+        advertiser_id = get_advertiser_id_by_name(advertiser_name)
+    except Exception as e:
+        raise Exception(f"Failed to get/create advertiser '{advertiser_name}': {str(e)}")
 
     order = {
         'name': order_name,
