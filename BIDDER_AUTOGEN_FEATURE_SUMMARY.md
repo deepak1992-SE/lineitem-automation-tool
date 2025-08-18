@@ -15,17 +15,17 @@ Successfully implemented an intelligent auto-generation system that automaticall
 When both **Bidder Name** and **Bidder Code** are provided:
 
 #### **Generated Fields**
-- **Order Name**: `Openwrap-{BIDDER_NAME}-Display1`
+- **Order Name**: `Openwrap-{BIDDER_NAME}-display`
 - **Advertiser Name**: `Network OpenWrap {BIDDER_NAME}`
 - **Line Item Prefix**: `OpenWrap-{BIDDER_NAME}-display`
 
 #### **Example Transformations**
 | Bidder Name | Bidder Code | Order Name | Advertiser Name | Line Item Prefix |
 |-------------|-------------|------------|-----------------|------------------|
-| PubMatic | pubmatic | Openwrap-PubMatic-Display1 | Network OpenWrap PubMatic | OpenWrap-PubMatic-display |
-| AppNexus | appnexus | Openwrap-AppNexus-Display1 | Network OpenWrap AppNexus | OpenWrap-AppNexus-display |
-| Rubicon | rubicon | Openwrap-Rubicon-Display1 | Network OpenWrap Rubicon | OpenWrap-Rubicon-display |
-| Amazon | amazon | Openwrap-Amazon-Display1 | Network OpenWrap Amazon | OpenWrap-Amazon-display |
+| PubMatic | pubmatic | Openwrap-PubMatic-display | Network OpenWrap PubMatic | OpenWrap-PubMatic-display |
+| AppNexus | appnexus | Openwrap-AppNexus-display | Network OpenWrap AppNexus | OpenWrap-AppNexus-display |
+| Rubicon | rubicon | Openwrap-Rubicon-display | Network OpenWrap Rubicon | OpenWrap-Rubicon-display |
+| Amazon | amazon | Openwrap-Amazon-display | Network OpenWrap Amazon | OpenWrap-Amazon-display |
 
 ### 3. **Smart Behavior**
 - **Conditional Activation**: Only works when BOTH fields have values
@@ -49,7 +49,7 @@ function updateBidderFields() {
     
     if (bidderName && bidderCode) {
         // Auto-generate all three fields
-        document.getElementById('order_name').value = `Openwrap-${bidderName}-Display1`;
+        document.getElementById('order_name').value = `Openwrap-${bidderName}-display`;
         document.getElementById('advertiser_name').value = `Network OpenWrap ${bidderName}`;
         document.getElementById('lineitem_prefix').value = `OpenWrap-${bidderName}-display`;
         
@@ -66,7 +66,7 @@ bidder_code = form.get('bidder_code', '').strip() or None
 
 # Auto-generate names if both are provided
 if bidder_name and bidder_code:
-    order_name = f'Openwrap-{bidder_name}-Display1'
+    order_name = f'Openwrap-{bidder_name}-display'
     advertiser_name = f'Network OpenWrap {bidder_name}'
     lineitem_prefix = f'OpenWrap-{bidder_name}-display'
 ```

@@ -269,13 +269,12 @@ def index():
             # Auto-generate names if both bidder name and code are provided
             if bidder_name and bidder_code:
                 # Override form values with auto-generated ones
-                order_name = f'Openwrap-{bidder_name}-Display1'
+                order_name = f'Openwrap-{bidder_name}-display'
                 advertiser_name = f'Network OpenWrap {bidder_name}'
                 lineitem_prefix = f'OpenWrap-{bidder_name}-display'
                 
                 logging.debug(f"Auto-generated names for bidder '{bidder_name}':")
                 logging.debug(f"  Order Name: {order_name}")
-                logging.debug(f"  Advertiser Name: {advertiser_name}")
                 logging.debug(f"  Line Item Prefix: {lineitem_prefix}")
             
             # Setup Google Ads client with the network code from the form

@@ -37,16 +37,17 @@ Example: HB $15.00+ (Catch-all 15.0-20.0)
 
 ## 🎯 **Auto-Generated Prefix Logic**
 
-When both **Bidder Name** and **Bidder Code** are provided, the line item prefix is automatically generated:
+When both **Bidder Name** and **Bidder Code** are provided, the system automatically generates:
 
 ```
+Order Name = Openwrap-{BIDDER_NAME}-display
 Line Item Prefix = OpenWrap-{BIDDER_NAME}-display
 ```
 
 ### **Examples:**
-- **Bidder Name**: `PubMatic` → **Prefix**: `OpenWrap-PubMatic-display`
-- **Bidder Name**: `AppNexus` → **Prefix**: `OpenWrap-AppNexus-display`
-- **Bidder Name**: `Rubicon` → **Prefix**: `OpenWrap-Rubicon-display`
+- **Bidder Name**: `PubMatic` → **Order Name**: `Openwrap-PubMatic-display`, **Prefix**: `OpenWrap-PubMatic-display`
+- **Bidder Name**: `AppNexus` → **Order Name**: `Openwrap-AppNexus-display`, **Prefix**: `OpenWrap-AppNexus-display`
+- **Bidder Name**: `Rubicon` → **Order Name**: `Openwrap-Rubicon-display`, **Prefix**: `OpenWrap-Rubicon-display`
 
 ## 📊 **Complete Examples**
 
@@ -56,6 +57,7 @@ Line Item Prefix = OpenWrap-{BIDDER_NAME}-display
 - Bidder Code: `pubmatic`
 - Price Range: 5.00-7.00, Granularity: 0.01
 
+**Generated Order Name:** `Openwrap-PubMatic-display`
 **Generated Prefix:** `OpenWrap-PubMatic-display`
 
 **Line Item Names:**
@@ -73,6 +75,7 @@ OpenWrap-PubMatic-display_HB $6.99
 - Bidder Code: `appnexus`
 - Price Range: 10.00-20.00, Granularity: -1
 
+**Generated Order Name:** `Openwrap-AppNexus-display`
 **Generated Prefix:** `OpenWrap-AppNexus-display`
 
 **Line Item Name:**

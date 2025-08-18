@@ -140,7 +140,7 @@ The application provides live calculation and validation:
 When both **Bidder Name** and **Bidder Code** are provided, the application automatically generates:
 
 #### **Auto-Generated Fields**
-- **Order Name**: `Openwrap-{BIDDER_NAME}-Display1`
+- **Order Name**: `Openwrap-{BIDDER_NAME}-display`
 - **Advertiser Name**: `Network OpenWrap {BIDDER_NAME}`
 - **Line Item Prefix**: `OpenWrap-{BIDDER_NAME}-display`
 
@@ -150,7 +150,7 @@ If you enter:
 - **Bidder Code**: `pubmatic`
 
 The system automatically populates:
-- **Order Name**: `Openwrap-PubMatic-Display1`
+- **Order Name**: `Openwrap-PubMatic-display`
 - **Advertiser Name**: `Network OpenWrap PubMatic`
 - **Line Item Prefix**: `OpenWrap-PubMatic-display`
 
