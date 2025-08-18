@@ -322,16 +322,16 @@ def index():
                 if price.get('granularity') == '-1':
                     price_str = f"{float(price['start_range']):.2f}"
                     if lineitem_prefix:
-                        name = f"{lineitem_prefix}_Top Bid: HB ${price_str}+ (Catch-all {price['start_range']}-{price['end_range']})"
+                        name = f"{lineitem_prefix}_HB ${price_str}+ (Catch-all {price['start_range']}-{price['end_range']})"
                     else:
-                        name = f"Top Bid: HB ${price_str}+ (Catch-all {price['start_range']}-{price['end_range']})"
+                        name = f"HB ${price_str}+ (Catch-all {price['start_range']}-{price['end_range']})"
                     micro_amount = int(float(price['start_range']) * 1000000)
                 else:
                     price_str = f"{float(price['start_range']):.2f}"
                     if lineitem_prefix:
-                        name = f"{lineitem_prefix}_Top Bid: HB ${price_str}"
+                        name = f"{lineitem_prefix}_HB ${price_str}"
                     else:
-                        name = f"Top Bid: HB ${price_str}"
+                        name = f"HB ${price_str}"
                 micro_amount = int(float(price['start_range']) * 1000000)
                 config = create_line_item_config(
                     name=name,
