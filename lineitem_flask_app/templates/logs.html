@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Logs - Lineitem Automation Tool</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2em;
+        }
+        .controls {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .log-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .log-selector select {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        .logs-container {
+            padding: 20px;
+            max-height: 600px;
+            overflow-y: auto;
+            background: #1e1e1e;
+            color: #f8f8f2;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .log-entry {
+            padding: 2px 0;
+            border-bottom: 1px solid #333;
+            word-wrap: break-word;
+        }
+        .log-entry:hover {
+            background: #2d2d2d;
+        }
+        .log-entry.error {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+        }
+        .log-entry.warning {
+            color: #ffd93d;
+            background: rgba(255, 217, 61, 0.1);
+        }
+        .log-entry.info {
+            color: #4ecdc4;
+        }
+        .log-entry.debug {
+            color: #95a5a6;
+        }
+        .log-entry.critical {
+            color: #e74c3c;
+            background: rgba(231, 76, 60, 0.2);
+            font-weight: bold;
+    }
+        .status-bar {
+            padding: 10px 20px;
+            background: #e9ecef;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+        .refresh-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .auto-refresh {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .auto-refresh input[type="checkbox"] {
+            margin: 0;
+        }
+        .timestamp {
+            color: #6c757d;
+            font-size: 12px;
+        }
+        .no-logs {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            font-style: italic;
+        }
+        .filter-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .filter-controls input[type="text"] {
+            padding: 6px 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            min-width: 200px;
+        }
+        .filter-controls label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+        .filter-controls input[type="checkbox"] {
+            margin: 0;
+        }
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .log-selector, .action-buttons, .filter-controls {
+                justify-content: center;
+            }
+            .filter-controls input[type="text"] {
+                min-width: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Application Logs</h1>
+            <p>Monitor your application's activity and troubleshoot issues</p>
+        </div>
+        
+        <div class="controls">
+            <div class="log-selector">
+                <label for="logFile">Log File:</label>
+                <select id="logFile" onchange="changeLogFile()">
+                    {% for filename, display_name in log_files.items() %}
+                    <option value="{{ filename }}" {% if filename == selected_file %}selected{% endif %}>
+                        {{ display_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-controls">
+                <input type="text" id="searchFilter" placeholder="Search logs..." onkeyup="filterLogs()">
+                <label>
+                    <input type="checkbox" id="showErrors" checked> Show Errors
+                </label>
+                <label>
+                    <input type="checkbox" id="showWarnings" checked> Show Warnings
+                </label>
+                <label>
+                    <input type="checkbox" id="showInfo" checked> Show Info
+                </label>
+                <label>
+                    <input type="checkbox" id="showDebug"> Show Debug
+                </label>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="refreshLogs()">🔄 Refresh</button>
+                <button class="btn btn-danger" onclick="clearLogs()">🗑️ Clear Logs</button>
+                <a href="/" class="btn btn-secondary">🏠 Home</a>
+            </div>
+        </div>
+        
+        <div class="logs-container" id="logsContainer">
+            {% if logs_content %}
+                {% for log_line in logs_content %}
+                    <div class="log-entry {{ get_log_level_class(log_line) }}" data-level="{{ get_log_level(log_line) }}">
+                        {{ log_line.rstrip() }}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-logs">
+                    <p>No logs available yet.</p>
+                    <p>Logs will appear here as your application runs.</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="status-bar">
+            <div class="refresh-info">
+                <div class="auto-refresh">
+                    <input type="checkbox" id="autoRefresh" onchange="toggleAutoRefresh()">
+                    <label for="autoRefresh">Auto-refresh every 10 seconds</label>
+                </div>
+                <span class="timestamp">Last updated: <span id="lastUpdated">{{ moment().format('YYYY-MM-DD HH:mm:ss') }}</span></span>
+            </div>
+            <div>
+                <span id="logCount">{{ logs_content|length if logs_content else 0 }}</span> log entries
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let autoRefreshInterval;
+        let currentLogFile = '{{ selected_file }}';
+        
+        function changeLogFile() {
+            const selectedFile = document.getElementById('logFile').value;
+            if (selectedFile !== currentLogFile) {
+                currentLogFile = selectedFile;
+                refreshLogs();
+            }
+        }
+        
+        function refreshLogs() {
+            fetch(`/api/logs?file=${currentLogFile}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayLogs(data.logs);
+                        document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
+                        document.getElementById('logCount').textContent = data.logs.length;
+                    } else {
+                        console.error('Error fetching logs:', data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching logs:', error);
+                });
+        }
+        
+        function displayLogs(logs) {
+            const container = document.getElementById('logsContainer');
+            if (logs.length === 0) {
+                container.innerHTML = `
+                    <div class="no-logs">
+                        <p>No logs available yet.</p>
+                        <p>Logs will appear here as your application runs.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = logs.map(logLine => {
+                const level = getLogLevel(logLine);
+                const levelClass = getLogLevelClass(logLine);
+                return `<div class="log-entry ${levelClass}" data-level="${level}">${logLine.rtrim()}</div>`;
+            }).join('');
+            
+            // Apply current filters
+            filterLogs();
+            
+            // Scroll to bottom
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function getLogLevel(logLine) {
+            if (logLine.includes(' - CRITICAL - ')) return 'critical';
+            if (logLine.includes(' - ERROR - ')) return 'error';
+            if (logLine.includes(' - WARNING - ')) return 'warning';
+            if (logLine.includes(' - INFO - ')) return 'info';
+            if (logLine.includes(' - DEBUG - ')) return 'debug';
+            return 'unknown';
+        }
+        
+        function getLogLevelClass(logLine) {
+            const level = getLogLevel(logLine);
+            return level !== 'unknown' ? level : '';
+        }
+        
+        function filterLogs() {
+            const searchTerm = document.getElementById('searchFilter').value.toLowerCase();
+            const showErrors = document.getElementById('showErrors').checked;
+            const showWarnings = document.getElementById('showWarnings').checked;
+            const showInfo = document.getElementById('showInfo').checked;
+            const showDebug = document.getElementById('showDebug').checked;
+            
+            const logEntries = document.querySelectorAll('.log-entry');
+            
+            logEntries.forEach(entry => {
+                const level = entry.dataset.level;
+                const text = entry.textContent.toLowerCase();
+                const matchesSearch = searchTerm === '' || text.includes(searchTerm);
+                const matchesLevel = 
+                    (level === 'error' && showErrors) ||
+                    (level === 'warning' && showWarnings) ||
+                    (level === 'info' && showInfo) ||
+                    (level === 'debug' && showDebug) ||
+                    (level === 'critical') ||
+                    (level === 'unknown');
+                
+                if (matchesSearch && matchesLevel) {
+                    entry.style.display = 'block';
+                } else {
+                    entry.style.display = 'none';
+                }
+            });
+        }
+        
+        function toggleAutoRefresh() {
+            const autoRefresh = document.getElementById('autoRefresh');
+            if (autoRefresh.checked) {
+                autoRefreshInterval = setInterval(refreshLogs, 10000); // 10 seconds
+            } else {
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval);
+                    autoRefreshInterval = null;
+                }
+            }
+        }
+        
+        function clearLogs() {
+            if (confirm('Are you sure you want to clear all logs? This action cannot be undone.')) {
+                window.location.href = '/clear-logs';
+            }
+        }
+        
+        // Initialize auto-refresh if checkbox is checked
+        document.addEventListener('DOMContentLoaded', function() {
+            if (document.getElementById('autoRefresh').checked) {
+                toggleAutoRefresh();
+            }
+        });
+        
+        // Auto-refresh on page focus
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && document.getElementById('autoRefresh').checked) {
+                refreshLogs();
+            }
+        });
+    </script>
+</body>
+</html>
+

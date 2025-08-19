@@ -27,6 +27,183 @@
             margin-left: 32px;
             margin-bottom: 40px;
         }
+        .sidebar a {
+            transition: all 0.3s ease;
+        }
+        .sidebar a:hover {
+            color: #007bb5 !important;
+            transform: translateX(5px);
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow-y: auto;
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+        
+        .close {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+        
+        .close:hover {
+            opacity: 0.7;
+        }
+        
+        .modal-body {
+            padding: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid #e5e7eb;
+            text-align: right;
+            background: #f8f9fa;
+            border-radius: 0 0 8px 8px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin-left: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #0096e6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #007bb5;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        
+        .confirmation-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        
+        .confirmation-table th,
+        .confirmation-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .confirmation-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .confirmation-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .confirmation-details {
+            background: #f8f9fa;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .confirmation-details h4 {
+            margin: 0 0 10px 0;
+            color: #0096e6;
+        }
+        
+        .confirmation-details p {
+            margin: 5px 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .confirmation-summary {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .confirmation-summary h4 {
+            margin: 0 0 10px 0;
+            color: #1565c0;
+        }
+        
+        .confirmation-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .confirmation-warning h4 {
+            margin: 0 0 10px 0;
+            color: #856404;
+        }
+        
+        .confirmation-warning p {
+            margin: 5px 0;
+            color: #856404;
+        }
+        
         .main {
             margin-left: 240px;
             padding: 40px 32px;
@@ -136,6 +313,11 @@
     <div class="sidebar">
         <div class="logo">Pub<span style="color:#222">Matic</span></div>
         <div style="margin-left:32px; color:#888; font-size:1.1rem;">Line Item Automation</div>
+        <div style="margin-left:32px; margin-top: 20px;">
+            <a href="/logs" style="color: #0096e6; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;">
+                📋 View Logs
+            </a>
+        </div>
     </div>
     <div class="main">
         <div class="form-card">
@@ -508,17 +690,292 @@
                     <div id="progress-bar" style="height:100%; width:0%; background:#0096e6; color:#fff; text-align:center; line-height:24px; font-weight:600; transition:width 0.3s; border-radius:6px;">0%</div>
                   </div>
                 </div>
-                <input class="submit-btn" id="submit-btn" type="submit" value="Create Line Items">
+                <button type="button" class="submit-btn" id="submit-btn" onclick="showConfirmation()">Create Line Items</button>
             </form>
             <script>
+            // Confirmation Modal Functions
+            function showConfirmation() {
+                // Validate form first
+                if (!validateForm()) {
+                    return;
+                }
+                
+                // Generate confirmation content
+                const confirmationContent = generateConfirmationContent();
+                document.getElementById('confirmationContent').innerHTML = confirmationContent;
+                
+                // Show modal
+                document.getElementById('confirmationModal').style.display = 'block';
+            }
+            
+            function closeConfirmation() {
+                document.getElementById('confirmationModal').style.display = 'none';
+            }
+            
+            function confirmAndSubmit() {
+                // Copy form data to hidden form
+                copyFormData();
+                
+                // Submit the hidden form
+                document.getElementById('hiddenForm').submit();
+                
+                // Close modal
+                closeConfirmation();
+            }
+            
+            function validateForm() {
+                const requiredFields = [
+                    'order_name', 'user_email', 'advertiser_name', 
+                    'network_code', 'lineitem_type', 'creative_sizes'
+                ];
+                
+                for (const fieldName of requiredFields) {
+                    const field = document.querySelector(`[name="${fieldName}"]`);
+                    if (!field || !field.value.trim()) {
+                        alert(`Please fill in the required field: ${fieldName.replace('_', ' ')}`);
+                        field?.focus();
+                        return false;
+                    }
+                }
+                
+                // Check if at least one price range is defined
+                const rangesTable = document.getElementById('ranges-table');
+                if (rangesTable) {
+                    const rows = rangesTable.getElementsByTagName('tbody')[0].rows;
+                    if (rows.length === 0) {
+                        alert('Please add at least one price range.');
+                        return false;
+                    }
+                    
+                    // Validate each range
+                    for (let i = 0; i < rows.length; i++) {
+                        const inputs = rows[i].getElementsByTagName('input');
+                        if (inputs.length >= 3) {
+                            const start = parseFloat(inputs[0].value);
+                            const end = parseFloat(inputs[1].value);
+                            const granularity = parseFloat(inputs[2].value);
+                            
+                            if (isNaN(start) || isNaN(end) || isNaN(granularity)) {
+                                alert(`Please fill in all fields for price range ${i + 1}.`);
+                                return false;
+                            }
+                            
+                            if (start >= end) {
+                                alert(`Start range must be less than end range for price range ${i + 1}.`);
+                                return false;
+                            }
+                            
+                            if (granularity !== -1 && granularity <= 0) {
+                                alert(`Granularity must be -1 (catch-all) or greater than 0 for price range ${i + 1}.`);
+                                return false;
+                            }
+                        }
+                    }
+                }
+                
+                return true;
+            }
+            
+            function generateConfirmationContent() {
+                const form = document.querySelector('form');
+                const formData = new FormData(form);
+                
+                // Get basic form data
+                const orderName = formData.get('order_name');
+                const advertiserName = formData.get('advertiser_name');
+                const lineItemType = formData.get('lineitem_type');
+                const setupType = formData.get('openwrap_setup_type');
+                const lineItemPrefix = formData.get('lineitem_prefix') || 'None';
+                const numCreatives = formData.get('num_creatives') || '1';
+                const creativeSizes = formData.get('creative_sizes');
+                const currencyCode = formData.get('currency_code') || 'USD';
+                const currencyExchange = formData.get('currency_exchange') === 'on';
+                const targetCurrency = formData.get('target_currency') || 'INR';
+                
+                // Get price ranges
+                const rangesTable = document.getElementById('ranges-table');
+                let priceRanges = [];
+                let totalLineItems = 0;
+                
+                if (rangesTable) {
+                    const rows = rangesTable.getElementsByTagName('tbody')[0].rows;
+                    for (let i = 0; i < rows.length; i++) {
+                        const inputs = rows[i].getElementsByTagName('input');
+                        const selects = rows[i].getElementsByTagName('select');
+                        
+                        if (inputs.length >= 3) {
+                            const start = parseFloat(inputs[0].value);
+                            const end = parseFloat(inputs[1].value);
+                            const granularity = parseFloat(inputs[2].value);
+                            const rateId = selects[0]?.value || '1';
+                            
+                            priceRanges.push({
+                                start: start,
+                                end: end,
+                                granularity: granularity,
+                                rateId: rateId
+                            });
+                            
+                            // Calculate line items for this range
+                            if (granularity === -1) {
+                                totalLineItems += 1; // Catch-all creates 1 line item
+                            } else {
+                                let current = start;
+                                let bucketCount = 0;
+                                while (current <= end + 0.00001) {
+                                    bucketCount++;
+                                    current += granularity;
+                                }
+                                totalLineItems += Math.max(1, bucketCount);
+                            }
+                        }
+                    }
+                }
+                
+                // Generate price targeting values (similar to PyCharm output)
+                let priceTargetingValues = [];
+                for (const range of priceRanges) {
+                    if (range.granularity === -1) {
+                        // Catch-all range - show start price
+                        priceTargetingValues.push(range.start.toFixed(2));
+                    } else {
+                        // Regular range - generate all values
+                        let current = range.start;
+                        while (current <= range.end + 0.00001) {
+                            priceTargetingValues.push(current.toFixed(2));
+                            current += range.granularity;
+                        }
+                    }
+                }
+                
+                // Limit to first 50 values for display
+                const displayValues = priceTargetingValues.slice(0, 50);
+                const hasMore = priceTargetingValues.length > 50;
+                
+                let content = `
+                    <div class="confirmation-summary">
+                        <h4>📊 Summary</h4>
+                        <p><strong>Going to create ${totalLineItems} new line items.</strong></p>
+                        <p><strong>Total Creatives:</strong> ${totalLineItems * parseInt(numCreatives)}</p>
+                    </div>
+                    
+                    <div class="confirmation-details">
+                        <h4>📋 Order Details</h4>
+                        <p><strong>Order:</strong> ${orderName}</p>
+                        <p><strong>Advertiser:</strong> ${advertiserName}</p>
+                        <p><strong>Line Item Type:</strong> ${lineItemType}</p>
+                        <p><strong>Line Item Prefix:</strong> ${lineItemPrefix}</p>
+                        <p><strong>Setup Type:</strong> ${setupType}</p>
+                        <p><strong>Creative Sizes:</strong> ${creativeSizes}</p>
+                        <p><strong>Creatives per Line Item:</strong> ${numCreatives}</p>
+                        <p><strong>Currency:</strong> ${currencyExchange ? `${currencyCode} → ${targetCurrency}` : currencyCode}</p>
+                    </div>
+                    
+                    <div class="confirmation-details">
+                        <h4>💰 Price Granularity Ranges</h4>
+                        <table class="confirmation-table">
+                            <thead>
+                                <tr>
+                                    <th>Start Range</th>
+                                    <th>End Range</th>
+                                    <th>Granularity</th>
+                                    <th>Rate ID</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                
+                for (const range of priceRanges) {
+                    const granularityDisplay = range.granularity === -1 ? '-1 (Catch-all)' : range.granularity.toFixed(2);
+                    content += `
+                        <tr>
+                            <td>${range.start.toFixed(2)}</td>
+                            <td>${range.end.toFixed(2)}</td>
+                            <td>${granularityDisplay}</td>
+                            <td>${range.rateId}</td>
+                        </tr>`;
+                }
+                
+                content += `
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="confirmation-details">
+                        <h4>🎯 Line Items Will Have Targeting</h4>
+                        <p><strong>rates =</strong> [${displayValues.join(', ')}${hasMore ? ', ...' : ''}]</p>
+                        <p><strong>bidders =</strong> None</p>
+                        <p><strong>placements =</strong> RON (Run of Network)</p>
+                        <p><strong>custom targeting =</strong> OpenWrap targeting keys</p>
+                        <p><strong>same advertiser exception =</strong> False</p>
+                        <p><strong>device categories =</strong> None</p>
+                        <p><strong>device capabilities =</strong> None</p>
+                        <p><strong>roadblock type =</strong> ONE_OR_MORE</p>
+                        <p><strong>video position type =</strong> None</p>
+                    </div>
+                    
+                    <div class="confirmation-warning">
+                        <h4>⚠️ Important Notes</h4>
+                        <p>• This will create ${totalLineItems} line items in Google Ad Manager</p>
+                        <p>• Each line item will have ${numCreatives} creative(s)</p>
+                        <p>• Line items will target specific price points with OpenWrap targeting</p>
+                        <p>• Process cannot be undone once started</p>
+                    </div>
+                `;
+                
+                return content;
+            }
+            
+            function copyFormData() {
+                const originalForm = document.querySelector('form');
+                const hiddenForm = document.getElementById('hiddenForm');
+                
+                // Clear existing content
+                hiddenForm.innerHTML = '';
+                
+                // Copy all form elements
+                const formElements = originalForm.elements;
+                for (let i = 0; i < formElements.length; i++) {
+                    const element = formElements[i];
+                    if (element.name && element.type !== 'button') {
+                        if (element.type === 'checkbox') {
+                            if (element.checked) {
+                                const hiddenInput = document.createElement('input');
+                                hiddenInput.type = 'hidden';
+                                hiddenInput.name = element.name;
+                                hiddenInput.value = element.value;
+                                hiddenForm.appendChild(hiddenInput);
+                            }
+                        } else {
+                            const hiddenInput = document.createElement('input');
+                            hiddenInput.type = 'hidden';
+                            hiddenInput.name = element.name;
+                            hiddenInput.value = element.value;
+                            hiddenForm.appendChild(hiddenInput);
+                        }
+                    }
+                }
+                
+                // Log the copied data for debugging
+                console.log('Form data copied to hidden form:', hiddenForm.innerHTML);
+            }
+            
+            // Close modal when clicking outside
+            window.onclick = function(event) {
+                const modal = document.getElementById('confirmationModal');
+                if (event.target === modal) {
+                    closeConfirmation();
+                }
+            }
+            
             // Progress bar logic
-            const form = document.querySelector('form');
             const progressContainer = document.getElementById('progress-container');
             const progressBar = document.getElementById('progress-bar');
             const submitBtn = document.getElementById('submit-btn');
             let progress = 0;
             let interval = null;
-            form.addEventListener('submit', function(e) {
+            
+            // Add progress bar to hidden form submission
+            document.getElementById('hiddenForm').addEventListener('submit', function(e) {
                 progress = 0;
                 progressBar.style.width = '0%';
                 progressBar.textContent = '0%';
@@ -557,5 +1014,29 @@
             {% endwith %}
         </div>
     </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📋 Line Item Creation Confirmation</h3>
+                <span class="close" onclick="closeConfirmation()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="confirmationContent">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeConfirmation()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="confirmAndSubmit()">✅ Yes, Create Line Items</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden form for actual submission -->
+    <form id="hiddenForm" method="POST" enctype="multipart/form-data" style="display: none;">
+        <!-- All form fields will be copied here -->
+    </form>
 </body>
 </html>

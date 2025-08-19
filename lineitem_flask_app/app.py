@@ -2,6 +2,10 @@
 
 import os
 import sys
+import logging
+import logging.handlers
+from datetime import datetime
+import traceback
 
 # Add multiple possible paths for Openwrap_DFP_Setup
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -25,6 +29,63 @@ root_openwrap_dir = os.path.join(parent_dir, 'Openwrap_DFP_Setup')
 if root_openwrap_dir not in sys.path:
     sys.path.insert(0, root_openwrap_dir)
 
+# Create logs directory if it doesn't exist
+logs_dir = os.path.join(current_dir, 'logs')
+if not os.path.exists(logs_dir):
+    os.makedirs(logs_dir)
+
+# Configure comprehensive logging
+def setup_logging():
+    """Setup comprehensive logging configuration"""
+    # Create formatters
+    detailed_formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s'
+    )
+    simple_formatter = logging.Formatter(
+        '%(asctime)s - %(levelname)s - %(message)s'
+    )
+    
+    # Root logger configuration
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)
+    
+    # Clear any existing handlers
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
+    
+    # Console handler (INFO level and above)
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    console_handler.setFormatter(simple_formatter)
+    root_logger.addHandler(console_handler)
+    
+    # File handler for all logs (DEBUG level and above)
+    all_logs_file = os.path.join(logs_dir, 'all.log')
+    file_handler = logging.handlers.RotatingFileHandler(
+        all_logs_file, maxBytes=10*1024*1024, backupCount=5
+    )
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(detailed_formatter)
+    root_logger.addHandler(file_handler)
+    
+    # Error file handler (ERROR level and above)
+    error_logs_file = os.path.join(logs_dir, 'errors.log')
+    error_handler = logging.handlers.RotatingFileHandler(
+        error_logs_file, maxBytes=10*1024*1024, backupCount=5
+    )
+    error_handler.setLevel(logging.ERROR)
+    error_handler.setFormatter(detailed_formatter)
+    root_logger.addHandler(error_handler)
+    
+    # Flask app specific logger
+    app_logger = logging.getLogger('lineitem_app')
+    app_logger.setLevel(logging.DEBUG)
+    
+    return app_logger
+
+# Setup logging
+logger = setup_logging()
+
 print(f"DEBUG: Current directory: {current_dir}")
 print(f"DEBUG: Parent directory: {parent_dir}")
 print(f"DEBUG: Openwrap_DFP_Setup in current: {os.path.exists(openwrap_dir)}")
@@ -47,22 +108,22 @@ except ImportError:
     for path in possible_paths:
         if os.path.exists(path):
             file_path = path
-            print(f"DEBUG: Found create_line_items.py at: {path}")
+            logger.info(f"Found create_line_items.py at: {path}")
             break
     
     if file_path is None:
-        print(f"DEBUG: Could not find create_line_items.py in any of: {possible_paths}")
+        logger.error(f"Could not find create_line_items.py in any of: {possible_paths}")
         # Let's see what's actually in the Openwrap_DFP_Setup directory
         openwrap_dir = os.path.join(current_dir, "Openwrap_DFP_Setup")
         if os.path.exists(openwrap_dir):
-            print(f"DEBUG: Contents of {openwrap_dir}:")
+            logger.info(f"Contents of {openwrap_dir}:")
             for root, dirs, files in os.walk(openwrap_dir):
                 level = root.replace(openwrap_dir, '').count(os.sep)
                 indent = ' ' * 2 * level
-                print(f"{indent}{os.path.basename(root)}/")
+                logger.info(f"{indent}{os.path.basename(root)}/")
                 subindent = ' ' * 2 * (level + 1)
                 for file in files:
-                    print(f"{subindent}{file}")
+                    logger.info(f"{subindent}{file}")
         raise ImportError("create_line_items.py not found")
     
     spec = importlib.util.spec_from_file_location("create_line_items", file_path)
@@ -71,7 +132,7 @@ except ImportError:
     create_line_item_config = create_line_items_module.create_line_item_config
     create_line_items = create_line_items_module.create_line_items
 
-from flask import Flask, render_template, request, redirect, flash
+from flask import Flask, render_template, request, redirect, flash, jsonify
 # Import all required modules
 from Openwrap_DFP_Setup.dfp.create_orders import get_order_id_by_name, create_order
 from Openwrap_DFP_Setup.dfp.get_root_ad_unit_id import get_root_ad_unit_id
@@ -84,33 +145,29 @@ from Openwrap_DFP_Setup.dfp.get_advertisers import get_advertiser_id_by_name
 from Openwrap_DFP_Setup.dfp.get_placements import get_placement_ids_by_name
 from Openwrap_DFP_Setup.tasks.price_utils import num_to_str
 
-import logging
 import math
 
 # Setup Google Ad Manager credentials for Render deployment
-print("DEBUG: app.py - Starting Google Ads setup - VERSION 2")
-print(f"DEBUG: app.py - RENDER env var: {os.environ.get('RENDER')}")
-print(f"DEBUG: app.py - GOOGLE_SERVICE_ACCOUNT_JSON exists: {bool(os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON'))}")
-print(f"DEBUG: app.py - GOOGLEADS_YAML_CONTENT exists: {bool(os.environ.get('GOOGLEADS_YAML_CONTENT'))}")
-print(f"DEBUG: app.py - Current working directory: {os.getcwd()}")
-print(f"DEBUG: app.py - Environment variables: {dict(os.environ)}")
+logger.info("Starting Google Ads setup - VERSION 2")
+logger.info(f"RENDER env var: {os.environ.get('RENDER')}")
+logger.info(f"GOOGLE_SERVICE_ACCOUNT_JSON exists: {bool(os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON'))}")
+logger.info(f"GOOGLEADS_YAML_CONTENT exists: {bool(os.environ.get('GOOGLEADS_YAML_CONTENT'))}")
+logger.info(f"Current working directory: {os.getcwd()}")
 
 try:
     from googleads_env import setup_googleads_for_render
-    print("DEBUG: app.py - Imported googleads_env successfully")
+    logger.info("Imported googleads_env successfully")
     result = setup_googleads_for_render()
-    print(f"DEBUG: app.py - setup_googleads_for_render returned: {result}")
+    logger.info(f"setup_googleads_for_render returned: {result}")
 except ImportError as e:
-    print(f"DEBUG: app.py - ImportError: {e}")
+    logger.warning(f"ImportError: {e}")
     # Local development - use local googleads.yaml file
     pass
 except Exception as e:
-    print(f"DEBUG: app.py - Exception in setup_googleads_for_render: {e}")
+    logger.error(f"Exception in setup_googleads_for_render: {e}")
 
 app = Flask(__name__)
 app.secret_key = 'lineitem_creator_secret'
-
-logging.basicConfig(level=logging.DEBUG)
 
 def get_exchange_rate(from_currency, to_currency):
     """
@@ -162,13 +219,95 @@ def get_exchange_rate(from_currency, to_currency):
         return 1.0 / exchange_rates[to_currency][from_currency]
     
     # Default to 1.0 if no conversion rate found
-    logging.warning(f"No exchange rate found for {from_currency} to {to_currency}, using 1.0")
+    logger.warning(f"No exchange rate found for {from_currency} to {to_currency}, using 1.0")
     return 1.0
+
+@app.route('/logs')
+def view_logs():
+    """View application logs"""
+    try:
+        # Get log files
+        log_files = {
+            'all.log': 'All Logs',
+            'errors.log': 'Error Logs Only'
+        }
+        
+        selected_file = request.args.get('file', 'all.log')
+        if selected_file not in log_files:
+            selected_file = 'all.log'
+        
+        # Read log file
+        log_file_path = os.path.join(logs_dir, selected_file)
+        logs_content = []
+        
+        if os.path.exists(log_file_path):
+            with open(log_file_path, 'r') as f:
+                # Read last 1000 lines
+                lines = f.readlines()
+                logs_content = lines[-1000:] if len(lines) > 1000 else lines
+        
+        return render_template('logs.html', 
+                             logs_content=logs_content, 
+                             log_files=log_files, 
+                             selected_file=selected_file)
+    except Exception as e:
+        logger.error(f"Error viewing logs: {e}")
+        flash(f"Error viewing logs: {str(e)}", 'error')
+        return redirect('/')
+
+@app.route('/api/logs')
+def get_logs():
+    """API endpoint to get logs for AJAX requests"""
+    try:
+        selected_file = request.args.get('file', 'all.log')
+        if selected_file not in ['all.log', 'errors.log']:
+            selected_file = 'all.log'
+        
+        log_file_path = os.path.join(logs_dir, selected_file)
+        logs_content = []
+        
+        if os.path.exists(log_file_path):
+            with open(log_file_path, 'r') as f:
+                lines = f.readlines()
+                logs_content = lines[-1000:] if len(lines) > 1000 else lines
+        
+        return jsonify({
+            'success': True,
+            'logs': logs_content,
+            'file': selected_file,
+            'timestamp': datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error getting logs via API: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/clear-logs')
+def clear_logs():
+    """Clear all log files"""
+    try:
+        for filename in ['all.log', 'errors.log']:
+            log_file_path = os.path.join(logs_dir, filename)
+            if os.path.exists(log_file_path):
+                # Clear the file by opening in write mode
+                with open(log_file_path, 'w') as f:
+                    f.write(f"Logs cleared at {datetime.now()}\n")
+        
+        flash("Logs cleared successfully", 'success')
+        logger.info("Logs cleared by user")
+    except Exception as e:
+        logger.error(f"Error clearing logs: {e}")
+        flash(f"Error clearing logs: {str(e)}", 'error')
+    
+    return redirect('/logs')
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
         try:
+            logger.info("Processing form submission (after user confirmation)")
             form = request.form
 
             order_name = form['order_name']
@@ -178,6 +317,10 @@ def index():
             lineitem_prefix = form.get('lineitem_prefix', '')
             lineitem_type = form['lineitem_type']
             setup_type = form.get('openwrap_setup_type', 'WEB')
+            
+            logger.info(f"Form data - Order: {order_name}, Advertiser: {advertiser_name}, Network: {network_code}")
+            logger.info(f"Form data - Line Item Type: {lineitem_type}, Setup Type: {setup_type}, Prefix: {lineitem_prefix}")
+            
             # Map setup_type to canonical pwtplt value
             pwtplt_map = {
                 'WEB': 'DISPLAY',
@@ -196,18 +339,23 @@ def index():
             currency_code = form.get('currency_code', 'USD')
             num_creatives = int(form.get('num_creatives', '1') or '1')
             
+            logger.info(f"Creative sizes: {creative_sizes_str}, Currency: {currency_code}, Num creatives: {num_creatives}")
+            
             # Extract currency exchange settings
             currency_exchange = form.get('currency_exchange') == 'on'  # Checkbox returns 'on' when checked
             target_currency = form.get('target_currency', 'INR')  # New field for target currency, default to INR
+            
+            if currency_exchange:
+                logger.info(f"Currency exchange enabled: {currency_code} -> {target_currency}")
 
             # Prepare price bucket ranges
             expanded_prices = []
             ranges_count = int(form.get('ranges_count', '0') or '0')
-            logging.debug(f"ranges_count: {ranges_count}")
+            logger.debug(f"ranges_count: {ranges_count}")
             
             # If no ranges provided, create a default range
             if ranges_count == 0:
-                logging.debug("No ranges provided, creating default range")
+                logger.debug("No ranges provided, creating default range")
                 expanded_prices.append({
                     'start_range': '5.00',
                     'end_range': '7.00',
@@ -216,18 +364,24 @@ def index():
                     'pwtecp_values': ['5.00', '5.01', '5.02']
                 })
             else:
+                logger.info(f"Processing {ranges_count} price ranges")
                 for i in range(ranges_count):
                     start = float(form.get(f'start_range_{i}'))
                     end = float(form.get(f'end_range_{i}'))
                     gran = float(form.get(f'granularity_{i}'))
+                    rate_id = form.get(f'rate_id_{i}')
+                    
+                    logger.debug(f"Range {i+1}: {start} to {end}, granularity: {gran}, rate_id: {rate_id}")
                     
                     # Apply currency conversion if enabled
                     if currency_exchange and target_currency != currency_code:
                         exchange_rate = get_exchange_rate(currency_code, target_currency)
+                        original_start, original_end, original_gran = start, end, gran
                         start = start * exchange_rate
                         end = end * exchange_rate
                         if gran != -1:
                             gran = gran * exchange_rate
+                        logger.info(f"Applied exchange rate {exchange_rate}: {original_start}-{original_end} -> {start:.2f}-{end:.2f}")
                     
                     if gran == -1:
                         # Catch-all: one line item for the whole range, pwtecp is all integer values in range
@@ -236,12 +390,14 @@ def index():
                             'start_range': num_to_str(start, 2),
                             'end_range': num_to_str(end, 2),
                             'granularity': '-1',
-                            'rate_id': form.get(f'rate_id_{i}'),
+                            'rate_id': rate_id,
                             'pwtecp_values': pwtecp_values,
                             'is_catch_all': True
                         })
+                        logger.debug(f"Created catch-all range: {start:.2f}-{end:.2f} with {len(pwtecp_values)} pwtecp values")
                     else:
                         current = start
+                        bucket_count = 0
                         while current <= end + 1e-8:  # add epsilon for float rounding
                             # For each bucket, generate all pwtecp values in the bucket
                             bucket_start = current
@@ -257,10 +413,13 @@ def index():
                             expanded_prices.append({
                                 'start_range': num_to_str(current, 2),
                                 'granularity': num_to_str(gran, 2),
-                                'rate_id': form.get(f'rate_id_{i}'),
+                                'rate_id': rate_id,
                                 'pwtecp_values': pwtecp_values
                             })
+                            bucket_count += 1
                             current = round(current + gran, 8)
+                        
+                        logger.debug(f"Created {bucket_count} buckets for range {start:.2f}-{end:.2f}")
 
             # Get bidder name and code from form
             bidder_name = form.get('bidder_name', '').strip() or None
@@ -269,40 +428,67 @@ def index():
             # Auto-generate names if both bidder name and code are provided
             if bidder_name and bidder_code:
                 # Override form values with auto-generated ones
+                original_order_name = order_name
+                original_advertiser_name = advertiser_name
+                original_lineitem_prefix = lineitem_prefix
+                
                 order_name = f'Openwrap-{bidder_name}-display'
                 advertiser_name = f'Network OpenWrap {bidder_name}'
                 lineitem_prefix = f'OpenWrap-{bidder_name}-display'
                 
-                logging.debug(f"Auto-generated names for bidder '{bidder_name}':")
-                logging.debug(f"  Order Name: {order_name}")
-                logging.debug(f"  Line Item Prefix: {lineitem_prefix}")
+                logger.info(f"Auto-generated names for bidder '{bidder_name}':")
+                logger.info(f"  Order Name: {original_order_name} -> {order_name}")
+                logger.info(f"  Advertiser Name: {original_advertiser_name} -> {advertiser_name}")
+                logger.info(f"  Line Item Prefix: {original_lineitem_prefix} -> {lineitem_prefix}")
             
             # Setup Google Ads client with the network code from the form
             if os.environ.get('RENDER') and network_code:
                 try:
                     from googleads_env import setup_googleads_for_render
                     setup_googleads_for_render(network_code)
-                    logging.debug(f"Reconfigured Google Ads client with network code: {network_code}")
+                    logger.debug(f"Reconfigured Google Ads client with network code: {network_code}")
                 except Exception as e:
-                    logging.warning(f"Failed to reconfigure Google Ads client: {e}")
+                    logger.warning(f"Failed to reconfigure Google Ads client: {e}")
             
-            logging.debug(f"Expanded price_els = {expanded_prices}")
-            logging.debug(f"Network code = {network_code}")
-            logging.debug(f"Bidder name = {bidder_name}")
-            logging.debug(f"Bidder code = {bidder_code}")
+            logger.info(f"Final configuration:")
+            logger.info(f"  Expanded price buckets: {len(expanded_prices)}")
+            logger.info(f"  Network code: {network_code}")
+            logger.info(f"  Bidder name: {bidder_name}")
+            logger.info(f"  Bidder code: {bidder_code}")
+            logger.info(f"  Canonical pwtplt: {canonical_pwtplt}")
 
-            key_gen_obj = OpenWrapTargetingKeyGen(price_els=expanded_prices, creative_type=canonical_pwtplt, bidder_code=bidder_code)
+            logger.info("Creating OpenWrap targeting key generator")
+            try:
+                key_gen_obj = OpenWrapTargetingKeyGen(price_els=expanded_prices, creative_type=canonical_pwtplt, bidder_code=bidder_code)
+                logger.info("OpenWrap targeting key generator created successfully")
+            except Exception as e:
+                logger.error(f"Failed to create OpenWrap targeting key generator: {e}")
+                raise
 
             # Ensure order exists
-            order_id = get_order_id_by_name(order_name)
-            if not order_id:
-                order_id = create_order(order_name, advertiser_name, user_email)
+            logger.info(f"Checking if order '{order_name}' exists")
+            try:
+                order_id = get_order_id_by_name(order_name)
+                if not order_id:
+                    logger.info(f"Creating new order '{order_name}'")
+                    order_id = create_order(order_name, advertiser_name, user_email)
+                    logger.info(f"Order created with ID: {order_id}")
+                else:
+                    logger.info(f"Using existing order with ID: {order_id}")
+            except Exception as e:
+                logger.error(f"Error with order creation/lookup: {e}")
+                raise
 
             # Handle sizes
             sizes = []
-            for size_str in creative_sizes_str.split(','):
-                w, h = size_str.lower().split('x')
-                sizes.append({'width': int(w.strip()), 'height': int(h.strip())})
+            try:
+                for size_str in creative_sizes_str.split(','):
+                    w, h = size_str.lower().split('x')
+                    sizes.append({'width': int(w.strip()), 'height': int(h.strip())})
+                logger.info(f"Creative sizes: {sizes}")
+            except Exception as e:
+                logger.error(f"Error parsing creative sizes '{creative_sizes_str}': {e}")
+                raise
 
             # Determine inventory targeting
             placement_ids = []
@@ -312,18 +498,37 @@ def index():
                 # User provided placement names (comma-separated)
                 placement_names = [p.strip() for p in placement_names_str.split(',') if p.strip()]
                 if placement_names:
-                    placement_ids = get_placement_ids_by_name(placement_names)
+                    logger.info(f"Looking up placements: {placement_names}")
+                    try:
+                        placement_ids = get_placement_ids_by_name(placement_names)
+                        logger.info(f"Found placement IDs: {placement_ids}")
+                    except Exception as e:
+                        logger.error(f"Error looking up placements: {e}")
+                        raise
             if not placement_ids:
                 # Run of Network: target root ad unit
-                ad_unit_ids = [get_root_ad_unit_id()]
+                logger.info("No placements specified, using Run of Network targeting")
+                try:
+                    ad_unit_ids = [get_root_ad_unit_id()]
+                    logger.info(f"Root ad unit ID: {ad_unit_ids}")
+                except Exception as e:
+                    logger.error(f"Error getting root ad unit ID: {e}")
+                    raise
 
             # Get all targeting sets (one per line item)
-            targeting_sets = key_gen_obj.get_dfp_targeting()
+            logger.info("Generating DFP targeting")
+            try:
+                targeting_sets = key_gen_obj.get_dfp_targeting()
+                logger.info(f"Generated {len(targeting_sets)} targeting sets")
+            except Exception as e:
+                logger.error(f"Error generating DFP targeting: {e}")
+                raise
 
             # Use target currency for line items if currency exchange is enabled
             final_currency_code = target_currency if currency_exchange else currency_code
 
             # Create line item configs for each price bucket
+            logger.info("Creating line item configurations")
             line_items_to_create = []
             price_configs = key_gen_obj.price_els
             for idx, price in enumerate(price_configs):
@@ -342,32 +547,60 @@ def index():
                     else:
                         name = f"HB ${price_str}"
                 micro_amount = int(float(price['start_range']) * 1000000)
-                config = create_line_item_config(
-                    name=name,
-                    order_id=order_id,
-                    placement_ids=placement_ids,
-                    ad_unit_ids=ad_unit_ids,
-                    cpm_micro_amount=micro_amount,
-                    sizes=sizes,
-                    key_gen_obj=None,  # We'll pass custom targeting directly
-                    lineitem_type=lineitem_type,
-                    currency_code=final_currency_code,
-                    setup_type=setup_type,
-                    custom_targeting=targeting_sets[idx]
-                )
-                line_items_to_create.append(config)
+                
+                logger.debug(f"Creating line item config {idx+1}/{len(price_configs)}: {name}")
+                logger.debug(f"  Price: ${price_str}, Micro amount: {micro_amount}, Currency: {final_currency_code}")
+                
+                try:
+                    config = create_line_item_config(
+                        name=name,
+                        order_id=order_id,
+                        placement_ids=placement_ids,
+                        ad_unit_ids=ad_unit_ids,
+                        cpm_micro_amount=micro_amount,
+                        sizes=sizes,
+                        key_gen_obj=None,  # We'll pass custom targeting directly
+                        lineitem_type=lineitem_type,
+                        currency_code=final_currency_code,
+                        setup_type=setup_type,
+                        custom_targeting=targeting_sets[idx]
+                    )
+                    line_items_to_create.append(config)
+                    logger.debug(f"Line item config created successfully: {name}")
+                except Exception as e:
+                    logger.error(f"Error creating line item config for {name}: {e}")
+                    raise
 
-            result_ids = create_line_items(line_items_to_create)
+            logger.info(f"Creating {len(line_items_to_create)} line items")
+            try:
+                result_ids = create_line_items(line_items_to_create)
+                logger.info(f"Line items created successfully: {result_ids}")
+            except Exception as e:
+                logger.error(f"Error creating line items: {e}")
+                raise
 
             # --- Create creatives and associate them with line items ---
             # Get advertiser ID (needed for creatives)
             advertiser_id = None
             try:
                 # Try to get advertiser ID by name
+                logger.info(f"Looking up advertiser: {advertiser_name}")
                 advertiser_id = get_advertiser_id_by_name(advertiser_name)
+                logger.info(f"Found advertiser ID: {advertiser_id}")
             except ImportError:
                 # Fallback: create advertiser if not found
-                advertiser_id = create_advertiser(advertiser_name)['id']
+                logger.info(f"Creating new advertiser: {advertiser_name}")
+                try:
+                    advertiser_result = create_advertiser(advertiser_name)
+                    advertiser_id = advertiser_result['id']
+                    logger.info(f"Advertiser created with ID: {advertiser_id}")
+                except Exception as e:
+                    logger.error(f"Error creating advertiser: {e}")
+                    raise
+            except Exception as e:
+                logger.error(f"Error looking up advertiser: {e}")
+                raise
+            
             # Select creative snippet file based on platform
             if setup_type in ["IN_APP", "IN_APP_VIDEO", "IN_APP_NATIVE"]:
                 creative_file = "creative_snippet_openwrap_in_app.html"
@@ -378,29 +611,54 @@ def index():
                 creative_file = "creative_snippet_openwrap_sf.html"  # fallback to .html if not present
             else:
                 creative_file = "creative_snippet_openwrap.html"
+            
+            logger.info(f"Using creative file: {creative_file}")
+            
             # Create creative configs
-            creative_configs = create_duplicate_creative_configs(
-                bidder_code=None,  # Not used for OpenWrap
-                order_name=order_name,
-                advertiser_id=advertiser_id,
-                sizes=sizes,
-                num_creatives=num_creatives,
-                prefix=lineitem_prefix,
-                creative_file=creative_file
-            )
-            creative_ids = create_creatives(creative_configs)
+            logger.info(f"Creating {num_creatives} creatives per line item")
+            try:
+                creative_configs = create_duplicate_creative_configs(
+                    bidder_code=None,  # Not used for OpenWrap
+                    order_name=order_name,
+                    advertiser_id=advertiser_id,
+                    sizes=sizes,
+                    num_creatives=num_creatives,
+                    prefix=lineitem_prefix,
+                    creative_file=creative_file
+                )
+                logger.info(f"Creative configs created: {len(creative_configs)}")
+            except Exception as e:
+                logger.error(f"Error creating creative configs: {e}")
+                raise
+            
+            logger.info("Creating creatives")
+            try:
+                creative_ids = create_creatives(creative_configs)
+                logger.info(f"Creatives created successfully: {creative_ids}")
+            except Exception as e:
+                logger.error(f"Error creating creatives: {e}")
+                raise
+            
             # Associate creatives with line items
-            make_licas(result_ids, creative_ids, size_overrides=sizes, setup_type=setup_type)
+            logger.info("Associating creatives with line items")
+            try:
+                make_licas(result_ids, creative_ids, size_overrides=sizes, setup_type=setup_type)
+                logger.info("Creative association completed")
+            except Exception as e:
+                logger.error(f"Error associating creatives with line items: {e}")
+                raise
 
             # Prepare summary info
             currency_info = f" (Currency: {final_currency_code})" if currency_exchange else ""
             summary_message = f"✅ Order '{order_name}' created. Line items: {len(result_ids)}. Creatives per line item: {num_creatives}.{currency_info}"
             flash(summary_message, 'success')
+            logger.info(f"Form processing completed successfully: {summary_message}")
             return redirect('/')
 
         except Exception as e:
-            logging.exception("Unexpected error in form processing")
-            flash(f"❌ Unexpected error: {str(e)}")
+            error_msg = f"Unexpected error in form processing: {str(e)}"
+            logger.exception(error_msg)
+            flash(f"❌ {error_msg}")
             return redirect('/')
 
     return render_template('index.html', form_data=None, settings=settings)
