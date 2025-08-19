@@ -716,11 +716,40 @@
                 // Copy form data to hidden form
                 copyFormData();
                 
+                // Show progress bar
+                showProgressBar();
+                
                 // Submit the hidden form
                 document.getElementById('hiddenForm').submit();
                 
                 // Close modal
                 closeConfirmation();
+            }
+            
+            function showProgressBar() {
+                const progressContainer = document.getElementById('progress-container');
+                const progressBar = document.getElementById('progress-bar');
+                const submitBtn = document.getElementById('submit-btn');
+                
+                // Reset and show progress bar
+                progress = 0;
+                progressBar.style.width = '0%';
+                progressBar.textContent = '0%';
+                progressContainer.style.display = 'block';
+                submitBtn.disabled = true;
+                
+                // Add a small delay to show the progress bar starting
+                setTimeout(() => {
+                    // Start progress animation
+                    interval = setInterval(() => {
+                        if (progress < 90) {
+                            progress += Math.random() * 5 + 2; // 2-7% increments
+                            if (progress > 90) progress = 90;
+                            progressBar.style.width = progress + '%';
+                            progressBar.textContent = Math.floor(progress) + '%';
+                        }
+                    }, 300);
+                }, 100);
             }
             
             function validateForm() {
@@ -967,30 +996,12 @@
                 }
             }
             
-            // Progress bar logic
+            // Progress bar variables (used by confirmation modal)
             const progressContainer = document.getElementById('progress-container');
             const progressBar = document.getElementById('progress-bar');
             const submitBtn = document.getElementById('submit-btn');
             let progress = 0;
             let interval = null;
-            
-            // Add progress bar to hidden form submission
-            document.getElementById('hiddenForm').addEventListener('submit', function(e) {
-                progress = 0;
-                progressBar.style.width = '0%';
-                progressBar.textContent = '0%';
-                progressContainer.style.display = 'block';
-                submitBtn.disabled = true;
-                // Simulate progress up to 90% while waiting for backend
-                interval = setInterval(() => {
-                    if (progress < 90) {
-                        progress += Math.random() * 5 + 2; // 2-7% increments
-                        if (progress > 90) progress = 90;
-                        progressBar.style.width = progress + '%';
-                        progressBar.textContent = Math.floor(progress) + '%';
-                    }
-                }, 300);
-            });
             // On page load, if progress bar is visible, set to 100%
             window.addEventListener('pageshow', function() {
                 if (progressContainer.style.display === 'block') {
@@ -1000,6 +1011,19 @@
                     submitBtn.disabled = false;
                 }
             });
+            
+            // Function to complete progress bar (called after successful form submission)
+            function completeProgressBar() {
+                clearInterval(interval);
+                progressBar.style.width = '100%';
+                progressBar.textContent = '100%';
+                submitBtn.disabled = false;
+                
+                // Hide progress bar after a short delay
+                setTimeout(() => {
+                    progressContainer.style.display = 'none';
+                }, 2000);
+            }
             </script>
             {% with messages = get_flashed_messages(with_categories=true) %}
               {% if messages %}
@@ -1008,6 +1032,12 @@
                     <div style="margin: 18px 0; padding: 12px; background: #e6f7e6; color: #207520; border-radius: 6px; font-size: 1.08em; font-weight: 500;">
                       {{ message }}
                     </div>
+                    <script>
+                      // Complete progress bar when success message is shown
+                      if (typeof completeProgressBar === 'function') {
+                        completeProgressBar();
+                      }
+                    </script>
                   {% endif %}
                 {% endfor %}
               {% endif %}
