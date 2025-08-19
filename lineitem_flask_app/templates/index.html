@@ -752,6 +752,41 @@
                 }, 100);
             }
             
+            function getRangeFixSuggestion(range1, range2) {
+                // Suggest fixes for overlapping ranges
+                const overlapStart = Math.max(range1.start, range2.start);
+                const overlapEnd = Math.min(range1.end, range2.end);
+                
+                if (overlapStart === overlapEnd) {
+                    // Single point overlap
+                    return `Adjust Range ${range1.index} to end at $${(overlapStart - 0.01).toFixed(2)} or Range ${range2.index} to start at $${(overlapEnd + 0.01).toFixed(2)}`;
+                } else {
+                    // Range overlap
+                    return `Option 1: Adjust Range ${range1.index} to end at $${(overlapStart - 0.01).toFixed(2)}\nOption 2: Adjust Range ${range2.index} to start at $${(overlapEnd + 0.01).toFixed(2)}\nOption 3: Use catch-all (granularity -1) for one of the ranges`;
+                }
+            }
+            
+            function checkForOverlaps(ranges) {
+                // Check if any ranges overlap (excluding catch-all ranges)
+                for (let i = 0; i < ranges.length; i++) {
+                    for (let j = i + 1; j < ranges.length; j++) {
+                        const range1 = ranges[i];
+                        const range2 = ranges[j];
+                        
+                        // Skip catch-all ranges
+                        if (range1.granularity === -1 || range2.granularity === -1) {
+                            continue;
+                        }
+                        
+                        // Check if ranges overlap
+                        if (!(range1.end <= range2.start || range2.end <= range1.start)) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+            
             function validateForm() {
                 const requiredFields = [
                     'order_name', 'user_email', 'advertiser_name', 
@@ -796,6 +831,36 @@
                             
                             if (granularity !== -1 && granularity <= 0) {
                                 alert(`Granularity must be -1 (catch-all) or greater than 0 for price range ${i + 1}.`);
+                                return false;
+                            }
+                        }
+                    }
+                    
+                    // Check for overlapping ranges
+                    const ranges = [];
+                    for (let i = 0; i < rows.length; i++) {
+                        const inputs = rows[i].getElementsByTagName('input');
+                        if (inputs.length >= 3) {
+                            const start = parseFloat(inputs[0].value);
+                            const end = parseFloat(inputs[1].value);
+                            const granularity = parseFloat(inputs[2].value);
+                            
+                            if (granularity !== -1) {
+                                ranges.push({ start, end, index: i + 1 });
+                            }
+                        }
+                    }
+                    
+                    // Check for overlaps
+                    for (let i = 0; i < ranges.length; i++) {
+                        for (let j = i + 1; j < ranges.length; j++) {
+                            const range1 = ranges[i];
+                            const range2 = ranges[j];
+                            
+                            // Check if ranges overlap
+                            if (!(range1.end <= range2.start || range2.end <= range1.start)) {
+                                const suggestion = getRangeFixSuggestion(range1, range2);
+                                alert(`⚠️ OVERLAPPING RANGES DETECTED!\n\nRange ${range1.index}: $${range1.start} to $${range1.end}\nRange ${range2.index}: $${range2.start} to $${range2.end}\n\nThis will create duplicate line item names.\n\n💡 SUGGESTED FIX:\n${suggestion}\n\nPlease adjust your ranges to avoid overlap.`);
                                 return false;
                             }
                         }
@@ -949,6 +1014,15 @@
                         <p>• Line items will target specific price points with OpenWrap targeting</p>
                         <p>• Process cannot be undone once started</p>
                     </div>
+                    
+                    ${checkForOverlaps(priceRanges) ? `
+                    <div class="confirmation-warning" style="background: #f8d7da; border-color: #f5c6cb;">
+                        <h4>🚨 OVERLAP WARNING</h4>
+                        <p>• Some price ranges may overlap, creating duplicate line item names</p>
+                        <p>• This could cause errors during creation</p>
+                        <p>• Consider adjusting ranges or using catch-all granularity (-1)</p>
+                    </div>
+                    ` : ''}
                 `;
                 
                 return content;
